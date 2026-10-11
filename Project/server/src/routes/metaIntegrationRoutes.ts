@@ -84,7 +84,8 @@ metaIntegrationRoutes.get('/oauth-start/:channel', (req, res) => {
     const shopId = getShopId(req);
     const channel = req.params.channel.toUpperCase() as MetaSocialChannel;
     const clientId = 'MOCK_META_APP_ID';
-    const redirectUri = encodeURIComponent(`http://localhost:5173/settings?tab=meta-social&auth_success=true&channel=${channel}`);
+    const clientBase = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'http://localhost:5173';
+    const redirectUri = encodeURIComponent(`${clientBase}/settings?tab=meta-social&auth_success=true&channel=${channel}`);
     const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_manage_comments`;
     res.json({ success: true, oauth_url: oauthUrl });
   } catch (error: any) {

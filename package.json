@@ -1,0 +1,16 @@
+{
+  "name": "shopgrow-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ShopGrow AI — Production Deployment Package",
+  "scripts": {
+    "install:client": "npm --prefix Project/client install",
+    "install:server": "npm --prefix Project/server install",
+    "install:all": "npm run install:client && npm run install:server",
+    "build:client": "npm --prefix Project/client run build",
+    "build:server": "npm --prefix Project/server run build",
+    "build": "npm run install:all && npm run build:client && npm run build:server",
+    "start": "node Project/server/dist/index.js",
+    "test:security": "node Project/scratch/test_security_and_features.js"
+  }
+}

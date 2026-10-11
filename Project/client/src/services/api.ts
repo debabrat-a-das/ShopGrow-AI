@@ -1,6 +1,6 @@
 import { UserRole } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '') + '/api';
 
 class ApiService {
   private currentShopId: string = 'shop-saha-electronics-001';

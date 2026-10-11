@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -27,7 +29,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+const allowedOrigins = process.env.CLIENT_URL
+  ? [process.env.CLIENT_URL.replace(/\/$/, ''), 'http://localhost:5173', 'http://localhost:3000']
+  : '*';
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -75,6 +84,36 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 ShopGrow AI API Server running at http://localhost:${PORT}`);
+
+// Root Health check for hosting platforms (Render, Railway, Fly.io, etc.)
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'OK',
+    service: 'ShopGrow AI Server',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Production Unified Static Serving: Serve client/dist with SPA routing fallback
+const clientDistCandidates = [
+  path.resolve(process.cwd(), 'client/dist'),
+  path.resolve(process.cwd(), '../client/dist'),
+  path.resolve(process.cwd(), 'Project/client/dist')
+];
+const clientDistPath = clientDistCandidates.find(p => fs.existsSync(p));
+
+if (typeof clientDistPath === 'string' && clientDistPath.length > 0) {
+  const staticPath: string = clientDistPath;
+  console.log('Serving production frontend build from:', staticPath);
+  app.use(express.static(staticPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path === '/health') {
+      return next();
+    }
+    res.sendFile(path.join(staticPath, 'index.html'));
+  });
+}
+
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🚀 ShopGrow AI API Server running on port ${PORT}`);
 });

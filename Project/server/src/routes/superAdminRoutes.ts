@@ -306,7 +306,8 @@ router.post('/shops/:id/invite', (req: Request, res: Response) => {
   const { email } = req.body;
   const token = uuidv4().replace(/-/g, '').slice(0, 16);
   const inviteId = uuidv4();
-  const inviteLink = `http://localhost:5173/shop/login?shop=${shop.slug}&token=${token}`;
+  const clientBase = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, '') : 'http://localhost:5173';
+  const inviteLink = `${clientBase}/shop/login?shop=${shop.slug}&token=${token}`;
 
   const invite = {
     id: inviteId,
