@@ -5,14 +5,19 @@ import {
   MOCK_CONVERSATIONS 
 } from './mockData';
 
-const API_BASE = (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '') + '/api';
-
 class ApiService {
   private currentShopId: string = 'shop-saha-electronics-001';
   private currentUserRole: UserRole = 'SHOP_OWNER';
   private authToken: string = '';
   public isConnected: boolean = false;
   private hasReportedStatus: boolean = false;
+  private customBaseUrl: string = '';
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.customBaseUrl = localStorage.getItem('shopgrow_api_url') || '';
+    }
+  }
 
   setShopId(shopId: string) {
     this.currentShopId = shopId;
@@ -36,6 +41,36 @@ class ApiService {
 
   getToken(): string {
     return this.authToken;
+  }
+
+  getBaseUrl(): string {
+    if (this.customBaseUrl) {
+      return this.customBaseUrl.replace(/\/$/, '') + '/api';
+    }
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl) {
+      return String(envUrl).replace(/\/$/, '') + '/api';
+    }
+    return '/api';
+  }
+
+  getRawBaseUrl(): string {
+    if (this.customBaseUrl) {
+      return this.customBaseUrl.replace(/\/$/, '');
+    }
+    return import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '';
+  }
+
+  setCustomBaseUrl(url: string) {
+    this.customBaseUrl = (url || '').trim();
+    if (typeof window !== 'undefined') {
+      if (this.customBaseUrl) {
+        localStorage.setItem('shopgrow_api_url', this.customBaseUrl);
+      } else {
+        localStorage.removeItem('shopgrow_api_url');
+      }
+    }
+    this.pingBackend();
   }
 
   private notifyConnection(connected: boolean) {
@@ -120,9 +155,11 @@ class ApiService {
     }
   }
 
-  async pingBackend(): Promise<boolean> {
+  async pingBackend(targetUrl?: string): Promise<boolean> {
+    const raw = (targetUrl !== undefined ? targetUrl : this.getRawBaseUrl()).trim().replace(/\/$/, '');
+    const pingTarget = raw ? `${raw}/health` : `${this.getBaseUrl().replace(/\/api$/, '')}/health`;
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}/health`, { method: 'GET' }, 3000);
+      const res = await this.fetchWithTimeout(pingTarget, { method: 'GET' }, 4000);
       const ok = res.ok;
       this.notifyConnection(ok);
       return ok;
@@ -133,7 +170,7 @@ class ApiService {
   }
 
   async get(endpoint: string, params?: Record<string, any>) {
-    let url = `${API_BASE}${endpoint}`;
+    let url = `${this.getBaseUrl()}${endpoint}`;
     if (params) {
       const query = new URLSearchParams();
       Object.entries(params).forEach(([k, v]) => {
@@ -161,7 +198,7 @@ class ApiService {
 
   async post(endpoint: string, data?: any) {
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}${endpoint}`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
@@ -180,7 +217,7 @@ class ApiService {
 
   async put(endpoint: string, data?: any) {
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}${endpoint}`, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
@@ -194,7 +231,7 @@ class ApiService {
 
   async patch(endpoint: string, data?: any) {
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}${endpoint}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
@@ -208,7 +245,7 @@ class ApiService {
 
   async delete(endpoint: string) {
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}${endpoint}`, {
         method: 'DELETE',
         headers: this.getHeaders()
       });
@@ -229,7 +266,7 @@ class ApiService {
     }
 
     try {
-      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${this.getBaseUrl()}${endpoint}`, {
         method: 'POST',
         headers: {
           'x-shop-id': this.currentShopId,

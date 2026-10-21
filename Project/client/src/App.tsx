@@ -24,6 +24,7 @@ import { RecordSaleModal } from './components/RecordSaleModal';
 import { NewOfferModal } from './components/NewOfferModal';
 import { WhatsAppSimulatorDrawer } from './components/WhatsAppSimulatorDrawer';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ConnectBackendModal } from './components/ConnectBackendModal';
 
 import { api } from './services/api';
 import { UserRole, Customer, BusinessType, SubscriptionPlan, OperatingMode, Shop, ShopBranding } from './types';
@@ -68,6 +69,7 @@ export function App() {
 
   const [hotLeadsCount, setHotLeadsCount] = useState<number>(0);
   const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState<boolean>(false);
 
   // Modals state
   const [isImportOpen, setIsImportOpen] = useState(false);
