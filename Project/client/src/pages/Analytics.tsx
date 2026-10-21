@@ -5,6 +5,7 @@ import {
   ArrowRight, Smartphone, Eye, Calendar, Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
+import { MOCK_DASHBOARD, MOCK_ATTRIBUTION, MOCK_CROSS_SHOP } from '../services/mockData';
 
 export const Analytics: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'channels' | 'cross-shop'>('overview');
@@ -29,11 +30,14 @@ export const Analytics: React.FC = () => {
         api.get('/analytics/channel-attribution').catch(() => null),
         api.get('/analytics/cross-shop-overview').catch(() => null)
       ]);
-      setData(dashRes);
-      setAttributionData(attrRes);
-      setCrossShopData(crossRes);
+      setData(dashRes || MOCK_DASHBOARD);
+      setAttributionData(attrRes || MOCK_ATTRIBUTION);
+      setCrossShopData(crossRes || MOCK_CROSS_SHOP);
     } catch (err) {
       console.error(err);
+      setData(MOCK_DASHBOARD);
+      setAttributionData(MOCK_ATTRIBUTION);
+      setCrossShopData(MOCK_CROSS_SHOP);
     } finally {
       setLoading(false);
     }

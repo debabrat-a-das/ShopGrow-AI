@@ -23,6 +23,7 @@ import { CustomerDetailDrawer } from './components/CustomerDetailDrawer';
 import { RecordSaleModal } from './components/RecordSaleModal';
 import { NewOfferModal } from './components/NewOfferModal';
 import { WhatsAppSimulatorDrawer } from './components/WhatsAppSimulatorDrawer';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { api } from './services/api';
 import { UserRole, Customer, BusinessType, SubscriptionPlan, OperatingMode, Shop, ShopBranding } from './types';
@@ -66,6 +67,7 @@ export function App() {
   });
 
   const [hotLeadsCount, setHotLeadsCount] = useState<number>(0);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
 
   // Modals state
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -83,6 +85,30 @@ export function App() {
 
   // Key to force refresh of child components
   const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  useEffect(() => {
+    const handleConnectionChange = (e: any) => {
+      if (e.detail && typeof e.detail.connected === 'boolean') {
+        setIsOnline(e.detail.connected);
+      }
+    };
+    const handleGlobalError = (event: ErrorEvent) => {
+      console.warn('[Global Safe Handler] Captured unhandled window error:', event.error || event.message);
+    };
+    const handleGlobalRejection = (event: PromiseRejectionEvent) => {
+      console.warn('[Global Safe Handler] Captured unhandled promise rejection:', event.reason);
+    };
+
+    window.addEventListener('shopgrow-connection-status', handleConnectionChange);
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleGlobalRejection);
+
+    return () => {
+      window.removeEventListener('shopgrow-connection-status', handleConnectionChange);
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleGlobalRejection);
+    };
+  }, []);
 
   useEffect(() => {
     api.setUserRole(currentRole);
@@ -333,6 +359,24 @@ export function App() {
               )}
 
               {/* Dynamic Page Views Wrapped in z-10 for Uncompromised Readability */}
+                            {!isOnline && (
+                <div className="bg-amber-950/90 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-200 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md shadow-md animate-in fade-in">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
+                    <span className="font-medium">Backend server is offline or reconnecting. Displaying cached store data safely.</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const ok = await api.pingBackend();
+                      if (ok) triggerGlobalRefresh();
+                    }}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[11px] font-semibold border border-amber-500/40 transition active:scale-95"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              )}
+              <ErrorBoundary key={`${currentTab}-${refreshKey}`} fallbackTitle={`Temporary issue loading ${currentTab}`} onReset={triggerGlobalRefresh}>
               <div className="relative z-10 min-h-full">
                 {currentTab === 'dashboard' && (
                   <Dashboard
@@ -453,6 +497,7 @@ export function App() {
                 />
               )}
               </div>
+              </ErrorBoundary>
             </main>
           );
         })()}

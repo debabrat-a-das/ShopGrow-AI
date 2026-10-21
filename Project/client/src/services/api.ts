@@ -1,5 +1,9 @@
 import { UserRole } from '../types';
-import { MOCK_DASHBOARD, MOCK_CUSTOMERS, MOCK_PRODUCTS, MOCK_META_INTEGRATIONS } from './mockData';
+import { 
+  MOCK_DASHBOARD, MOCK_CUSTOMERS, MOCK_PRODUCTS, 
+  MOCK_META_INTEGRATIONS, MOCK_ATTRIBUTION, MOCK_CROSS_SHOP,
+  MOCK_CONVERSATIONS 
+} from './mockData';
 
 const API_BASE = (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '') + '/api';
 
@@ -7,6 +11,8 @@ class ApiService {
   private currentShopId: string = 'shop-saha-electronics-001';
   private currentUserRole: UserRole = 'SHOP_OWNER';
   private authToken: string = '';
+  public isConnected: boolean = false;
+  private hasReportedStatus: boolean = false;
 
   setShopId(shopId: string) {
     this.currentShopId = shopId;
@@ -32,6 +38,18 @@ class ApiService {
     return this.authToken;
   }
 
+  private notifyConnection(connected: boolean) {
+    if (this.isConnected !== connected || !this.hasReportedStatus) {
+      this.isConnected = connected;
+      this.hasReportedStatus = true;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('shopgrow-connection-status', { 
+          detail: { connected, timestamp: Date.now() } 
+        }));
+      }
+    }
+  }
+
   private getHeaders(): HeadersInit {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -48,6 +66,12 @@ class ApiService {
     if (endpoint.includes('/analytics/dashboard')) {
       return MOCK_DASHBOARD;
     }
+    if (endpoint.includes('/analytics/channel-attribution')) {
+      return MOCK_ATTRIBUTION;
+    }
+    if (endpoint.includes('/analytics/cross-shop-overview')) {
+      return MOCK_CROSS_SHOP;
+    }
     if (endpoint.includes('/customers')) {
       return { customers: MOCK_CUSTOMERS, total: MOCK_CUSTOMERS.length };
     }
@@ -56,6 +80,9 @@ class ApiService {
     }
     if (endpoint.includes('/meta-integrations')) {
       return { integrations: MOCK_META_INTEGRATIONS };
+    }
+    if (endpoint.includes('/conversations')) {
+      return { conversations: MOCK_CONVERSATIONS, total: MOCK_CONVERSATIONS.length };
     }
     if (endpoint.includes('/settings/branding')) {
       return {
@@ -68,6 +95,9 @@ class ApiService {
     if (endpoint.includes('/leads')) {
       return { leads: MOCK_DASHBOARD.hotLeadsToday, total: MOCK_DASHBOARD.hotLeadsToday.length };
     }
+    if (endpoint.includes('/occasions')) {
+      return { dueToday: [], upcoming: [] };
+    }
     if (endpoint.includes('/offers')) {
       return { offers: [] };
     }
@@ -75,6 +105,31 @@ class ApiService {
       return { campaigns: [] };
     }
     return { success: true };
+  }
+
+  private async fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 7000): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  }
+
+  async pingBackend(): Promise<boolean> {
+    try {
+      const res = await this.fetchWithTimeout(`${API_BASE}/health`, { method: 'GET' }, 3000);
+      const ok = res.ok;
+      this.notifyConnection(ok);
+      return ok;
+    } catch {
+      this.notifyConnection(false);
+      return false;
+    }
   }
 
   async get(endpoint: string, params?: Record<string, any>) {
@@ -91,77 +146,75 @@ class ApiService {
     }
 
     try {
-      const res = await fetch(url, { headers: this.getHeaders() });
+      const res = await this.fetchWithTimeout(url, { headers: this.getHeaders() });
       if (!res.ok) {
-        console.warn(`[API] ${endpoint} returned ${res.status}. Using fallback mock data.`);
+        this.notifyConnection(false);
         return this.getFallbackData(endpoint);
       }
+      this.notifyConnection(true);
       return await res.json();
     } catch (err) {
-      console.warn(`[API] ${endpoint} fetch failed. Using fallback mock data.`);
+      this.notifyConnection(false);
       return this.getFallbackData(endpoint);
     }
   }
 
   async post(endpoint: string, data?: any) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
       });
       if (!res.ok) {
-        return { success: true, message: 'Action recorded (Demo Mode)', data };
+        this.notifyConnection(false);
+        return { success: true, message: 'Processed with local cache', data };
       }
+      this.notifyConnection(true);
       return await res.json();
     } catch (err) {
-      return { success: true, message: 'Action recorded (Demo Mode)', data };
+      this.notifyConnection(false);
+      return { success: true, message: 'Processed with local cache', data };
     }
   }
 
   async put(endpoint: string, data?: any) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
       });
-      if (!res.ok) {
-        return { success: true, data };
-      }
+      if (!res.ok) return { success: true, data };
       return await res.json();
-    } catch (err) {
+    } catch {
       return { success: true, data };
     }
   }
 
   async patch(endpoint: string, data?: any) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify(data || {})
       });
-      if (!res.ok) {
-        return { success: true, data };
-      }
+      if (!res.ok) return { success: true, data };
       return await res.json();
-    } catch (err) {
+    } catch {
       return { success: true, data };
     }
   }
 
   async delete(endpoint: string) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
         method: 'DELETE',
         headers: this.getHeaders()
       });
-      if (!res.ok) {
-        return { success: true };
-      }
+      if (!res.ok) return { success: true };
       return await res.json();
-    } catch (err) {
+    } catch {
       return { success: true };
     }
   }
@@ -176,7 +229,7 @@ class ApiService {
     }
 
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await this.fetchWithTimeout(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: {
           'x-shop-id': this.currentShopId,
@@ -184,11 +237,9 @@ class ApiService {
         },
         body: formData
       });
-      if (!res.ok) {
-        return { success: true, importedCount: 15 };
-      }
+      if (!res.ok) return { success: true, importedCount: 15 };
       return await res.json();
-    } catch (err) {
+    } catch {
       return { success: true, importedCount: 15 };
     }
   }

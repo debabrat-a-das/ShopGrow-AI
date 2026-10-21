@@ -186,6 +186,64 @@ export const MOCK_DASHBOARD = {
   ]
 };
 
+export const MOCK_ATTRIBUTION = {
+  summary: {
+    totalRevenue: 78989,
+    totalSales: 2,
+    totalLeads: 4,
+    topChannel: "WhatsApp Marketing"
+  },
+  channelBreakdown: [
+    {
+      channel: "WhatsApp",
+      displayName: "WhatsApp Broadcast & AI Engagement",
+      revenue: 41999,
+      sales: 1,
+      leads: 2,
+      roi: "12.4x",
+      metrics: { hotLeads: 1, storeVisits: 1, sales: 1 }
+    },
+    {
+      channel: "Instagram",
+      displayName: "Instagram Reels & Direct Comments",
+      revenue: 36990,
+      sales: 1,
+      leads: 2,
+      roi: "8.6x",
+      metrics: { hotLeads: 1, storeVisits: 1, sales: 1 }
+    }
+  ]
+};
+
+export const MOCK_CROSS_SHOP = {
+  totals: {
+    totalRevenue: 185000,
+    totalShops: 2,
+    totalCustomers: 32,
+    totalSales: 5
+  },
+  shopComparison: [
+    {
+      id: "shop-saha-electronics-001",
+      name: "Saha Electronics",
+      city: "Kolkata",
+      business_type: "MOBILE_ELECTRONICS",
+      revenue: 78989,
+      sales: 2,
+      customers: 16
+    },
+    {
+      id: "shop-furniture-002",
+      name: "Royal Teak & Home Decor",
+      city: "Kolkata",
+      business_type: "FURNITURE",
+      revenue: 106011,
+      sales: 3,
+      customers: 16
+    }
+  ]
+};
+
 export const MOCK_CUSTOMERS = [
   {
     id: "cust-001",
@@ -282,5 +340,29 @@ export const MOCK_META_INTEGRATIONS = [
     mode: "MOCK_MODE",
     last_sync: new Date().toISOString(),
     metrics: { comments: 85, leads: 29, reach: 29500 }
+  }
+];
+
+export const MOCK_CONVERSATIONS = [
+  {
+    id: "conv-001",
+    shop_id: "shop-saha-electronics-001",
+    customer_id: "cust-001",
+    customer_name: "Anirban Mukherjee",
+    customer_phone: "+919830123456",
+    channel: "WHATSAPP",
+    status: "OPEN",
+    interest_level: "HOT",
+    last_message: "Amar purono Galaxy M31 exchange hobe? Kal dokane aschi.",
+    last_message_at: new Date().toISOString(),
+    unread: true,
+    messages: [
+      {
+        id: "msg-1",
+        sender: "CUSTOMER",
+        text: "Amar purono Galaxy M31 exchange hobe? Kal dokane aschi.",
+        timestamp: new Date().toISOString()
+      }
+    ]
   }
 ];
