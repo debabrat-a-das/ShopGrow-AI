@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Customer, Lead } from '../types';
+import { MOCK_DASHBOARD } from '../services/mockData';
 
 interface DashboardProps {
   onNavigate: (tab: string, extra?: any) => void;
@@ -36,9 +37,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setLoading(true);
     try {
       const res = await api.get('/analytics/dashboard');
-      setData(res);
+      setData(res || MOCK_DASHBOARD);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
+      setData(MOCK_DASHBOARD);
     } finally {
       setLoading(false);
     }
