@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, Store, User, Lock, Eye, EyeOff, Sparkles, 
   ArrowRight, CheckCircle2, AlertCircle, HelpCircle, ShieldCheck,
@@ -37,7 +37,11 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState<boolean>(false);
   const [forgotEmail, setForgotEmail] = useState<string>('');
-  const [forgotSuccess, setForgotSuccess] = useState<boolean>(false);
+  const [forgotToken, setForgotToken] = useState<string>('');
+  const [forgotNewPassword, setForgotNewPassword] = useState<string>('');
+  const [forgotStep, setForgotStep] = useState<'REQUEST' | 'RESET' | 'DONE'>('REQUEST');
+  const [forgotLoading, setForgotLoading] = useState<boolean>(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // QA Sandbox drawer state (strictly for internal testing/QA)
   const [showQASandbox, setShowQASandbox] = useState<boolean>(false);
@@ -49,7 +53,7 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
     setErrorMessage(null);
     if (isAdminRoute) {
       setEmail('admin@shopgrow.ai');
-      setPassword('Admin@ShopGrow2026!');
+      setPassword('');
     } else {
       setEmail('');
       setPassword('');
@@ -117,6 +121,68 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
       setErrorMessage(err.message || 'QA Login failed.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      setForgotError('Please enter your administrator email address.');
+      return;
+    }
+    setForgotLoading(true);
+    setForgotError(null);
+    try {
+      const endpoint = isAdminRoute ? '/auth/admin/forgot-password' : '/auth/forgot-password';
+      const res = await api.post(endpoint, { email: forgotEmail.trim() });
+      if (res && res.success) {
+        if (res.resetToken) {
+          setForgotToken(res.resetToken);
+        }
+        setForgotStep('RESET');
+      } else {
+        setForgotError(res?.error || 'Failed to generate reset request.');
+      }
+    } catch (err: any) {
+      setForgotError(err.message || 'Error communicating with authentication server.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleCompletePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotToken.trim()) {
+      setForgotError('Verification token is required.');
+      return;
+    }
+    if (forgotNewPassword.length < 8) {
+      setForgotError('New password must be at least 8 characters long.');
+      return;
+    }
+    if (!/[A-Z]/.test(forgotNewPassword) || !/[a-z]/.test(forgotNewPassword) || !/[0-9]/.test(forgotNewPassword)) {
+      setForgotError('Password must contain uppercase, lowercase, and numeric characters.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setForgotError(null);
+    try {
+      const endpoint = isAdminRoute ? '/auth/admin/reset-password' : '/auth/reset-password';
+      const res = await api.post(endpoint, {
+        email: forgotEmail.trim(),
+        token: forgotToken.trim(),
+        newPassword: forgotNewPassword
+      });
+      if (res && res.success) {
+        setForgotStep('DONE');
+      } else {
+        setForgotError(res?.error || 'Failed to reset password. Token may be invalid or expired.');
+      }
+    } catch (err: any) {
+      setForgotError(err.message || 'Password reset failed.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -362,46 +428,119 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
         </div>
       </main>
 
-      {/* Forgot Password Modal */}
+      {/* Forgot / Reset Password Modal */}
       {isForgotPasswordOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4">
-            <h3 className="font-bold text-white text-sm">Reset Password</h3>
-            <p className="text-xs text-slate-400">
-              Enter your email and we'll send you a secure verification link to reset your account password.
-            </p>
-            {forgotSuccess ? (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs">
-                Password reset link dispatched. Please check your inbox.
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <div className="flex items-center space-x-2">
+              <ShieldCheck className="h-5 w-5 text-emerald-400" />
+              <h3 className="font-bold text-white text-sm">
+                {isAdminRoute ? 'Super Admin Secure Password Reset' : 'Account Password Reset'}
+              </h3>
+            </div>
+
+            {forgotError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{forgotError}</span>
               </div>
-            ) : (
+            )}
+
+            {forgotStep === 'REQUEST' && (
+              <form onSubmit={handleRequestPasswordReset} className="space-y-3">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Enter your registered administrative email address to generate a cryptographically verified single-use reset token.
+                </p>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">Administrator Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="admin@shopgrow.ai"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition disabled:opacity-50"
+                >
+                  {forgotLoading ? 'Verifying & Generating Token...' : 'Generate Reset Token'}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 'RESET' && (
+              <form onSubmit={handleCompletePasswordReset} className="space-y-3">
+                <p className="text-xs text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
+                  Verification token generated. Please enter your new password below.
+                </p>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">Security Reset Token</label>
+                  <input
+                    type="text"
+                    required
+                    value={forgotToken}
+                    onChange={(e) => setForgotToken(e.target.value)}
+                    placeholder="Paste 64-character reset token"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs font-mono text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">New Password (min 8 chars, uppercase, lowercase, digit)</label>
+                  <input
+                    type="password"
+                    required
+                    value={forgotNewPassword}
+                    onChange={(e) => setForgotNewPassword(e.target.value)}
+                    placeholder="Enter secure new password"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition disabled:opacity-50"
+                >
+                  {forgotLoading ? 'Updating Password...' : 'Save New Password & Complete Reset'}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 'DONE' && (
               <div className="space-y-3">
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="you@shopdomain.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white"
-                />
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs">
+                  Password has been successfully updated and hashed in the secure store. You may now sign in using your new credentials.
+                </div>
                 <button
                   type="button"
-                  onClick={() => setForgotSuccess(true)}
+                  onClick={() => {
+                    setIsForgotPasswordOpen(false);
+                    setForgotStep('REQUEST');
+                    setPassword(forgotNewPassword);
+                  }}
                   className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition"
                 >
-                  Send Reset Link
+                  Return to Sign In
                 </button>
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                setIsForgotPasswordOpen(false);
-                setForgotSuccess(false);
-              }}
-              className="w-full py-1.5 text-xs text-slate-400 hover:text-white"
-            >
-              Close
-            </button>
+
+            {forgotStep !== 'DONE' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPasswordOpen(false);
+                  setForgotStep('REQUEST');
+                  setForgotError(null);
+                }}
+                className="w-full py-1.5 text-xs text-slate-400 hover:text-white transition"
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </div>
       )}

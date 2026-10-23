@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+﻿import { Router, Request, Response, NextFunction } from 'express';
 import { store } from '../db/store.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -31,7 +31,7 @@ authRoutes.post('/login', (req: Request, res: Response) => {
     return;
   }
 
-  const userResolution = store.resolveUserByCredentials(cleanEmail, password);
+  const userResolution = store.resolveUserByCredentials(cleanEmail, String(password));
 
   if (!userResolution || !userResolution.shop) {
     res.status(401).json({
@@ -79,8 +79,8 @@ authRoutes.post('/login', (req: Request, res: Response) => {
 
 /**
  * 2. Private Super Admin Login (/admin/login)
- * Strictly verifies against the database super_admins allowlist.
- * If email is not in super_admins with status 'ACTIVE', returns 403 Forbidden.
+ * Strictly verifies against hashed credentials and database super_admins allowlist.
+ * Never stores or validates against plaintext passwords.
  */
 authRoutes.post('/admin-login', (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -92,28 +92,23 @@ authRoutes.post('/admin-login', (req: Request, res: Response) => {
 
   const cleanEmail = String(email).toLowerCase().trim();
 
-  // Server-side Super Admin Allowlist check
-  if (!store.isSuperAdminEmail(cleanEmail)) {
+  // Server-side Super Admin Allowlist and Credential check with PBKDF2 hash verification
+  const authResult = store.verifyAdminCredentials(cleanEmail, String(password));
+
+  if (!authResult.valid || !authResult.admin) {
     store.logAuditAction('PLATFORM_GLOBAL', cleanEmail, 'ANONYMOUS', 'UNAUTHORIZED_ADMIN_LOGIN_ATTEMPT', {
       attempted_email: cleanEmail,
-      ip: req.ip
+      ip: req.ip,
+      reason: authResult.error
     });
-    res.status(403).json({
+    res.status(authResult.status || 401).json({
       success: false,
-      error: 'Access Denied: You do not have verified Super Administrator privileges on this platform.'
+      error: authResult.error || 'Invalid administrator credentials.'
     });
     return;
   }
 
-  const adminRecord = store.superAdmins.find(sa => sa.email.toLowerCase().trim() === cleanEmail && sa.status === 'ACTIVE');
-  if (!adminRecord) {
-    res.status(403).json({ success: false, error: 'Access Denied: Super Admin account not found or suspended.' });
-    return;
-  }
-
-  // Update last login timestamp
-  adminRecord.last_login_at = new Date().toISOString();
-
+  const adminRecord = authResult.admin;
   const token = `sg_token_super_admin_${uuidv4().replace(/-/g, '')}`;
 
   store.logAuditAction('PLATFORM_GLOBAL', adminRecord.full_name, 'SUPER_ADMIN', 'SUPER_ADMIN_LOGIN_SUCCESS', {
@@ -151,7 +146,133 @@ authRoutes.post('/admin-login', (req: Request, res: Response) => {
 });
 
 /**
- * 3. Auth context helper: Returns current active tenant / profile info
+ * 3. Request Password Reset for Admin / Users
+ * Generates a cryptographically random token, stores its SHA-256 hash with 60-min expiration.
+ */
+authRoutes.post('/admin/forgot-password', (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ success: false, error: 'Administrator email is required.' });
+    return;
+  }
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const result = store.createAdminPasswordResetToken(cleanEmail);
+
+  // Return safe confirmation. When token is generated, return token data for reset flow.
+  const responseData: any = {
+    success: true,
+    message: 'If an active administrator account with that email exists, password reset instructions have been generated.'
+  };
+
+  if (result.rawToken) {
+    responseData.resetToken = result.rawToken;
+    responseData.expiresAt = result.expiresAt;
+    responseData.resetUrl = `/admin/reset-password?token=${result.rawToken}&email=${encodeURIComponent(cleanEmail)}`;
+  }
+
+  res.json(responseData);
+});
+
+// Alias for generic public forgot-password
+authRoutes.post('/forgot-password', (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ success: false, error: 'Email is required.' });
+    return;
+  }
+  const cleanEmail = String(email).toLowerCase().trim();
+  if (store.isSuperAdminEmail(cleanEmail)) {
+    const result = store.createAdminPasswordResetToken(cleanEmail);
+    res.json({
+      success: true,
+      message: 'Password reset instructions have been generated.',
+      resetToken: result.rawToken,
+      expiresAt: result.expiresAt
+    });
+    return;
+  }
+  res.json({
+    success: true,
+    message: 'If an account exists with that email address, password reset instructions have been dispatched.'
+  });
+});
+
+/**
+ * 4. Complete Password Reset using Token
+ * Validates token against SHA-256 hash, enforces strong password policy, and updates PBKDF2 hash.
+ */
+authRoutes.post('/admin/reset-password', (req: Request, res: Response) => {
+  const { email, token, newPassword } = req.body;
+
+  if (!email || !token || !newPassword) {
+    res.status(400).json({ success: false, error: 'Email, reset token, and new password are required.' });
+    return;
+  }
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const result = store.resetAdminPasswordWithToken(cleanEmail, String(token), String(newPassword));
+
+  if (!result.success) {
+    res.status(400).json({ success: false, error: result.error });
+    return;
+  }
+
+  res.json({
+    success: true,
+    message: 'Password has been reset successfully. You may now sign in with your new password.'
+  });
+});
+
+// Alias for generic reset-password
+authRoutes.post('/reset-password', (req: Request, res: Response) => {
+  const { email, token, newPassword } = req.body;
+  if (!email || !token || !newPassword) {
+    res.status(400).json({ success: false, error: 'Email, reset token, and new password are required.' });
+    return;
+  }
+  const cleanEmail = String(email).toLowerCase().trim();
+  const result = store.resetAdminPasswordWithToken(cleanEmail, String(token), String(newPassword));
+  if (!result.success) {
+    res.status(400).json({ success: false, error: result.error });
+    return;
+  }
+  res.json({
+    success: true,
+    message: 'Password has been reset successfully.'
+  });
+});
+
+/**
+ * 5. Change Password for Authenticated Admin
+ * Requires current password verification and enforces policy on new password.
+ */
+authRoutes.post('/admin/change-password', (req: Request, res: Response) => {
+  const { email, currentPassword, newPassword } = req.body;
+  const headerEmail = (req.headers['x-user-email'] as string);
+  const targetEmail = email || headerEmail;
+
+  if (!targetEmail || !currentPassword || !newPassword) {
+    res.status(400).json({ success: false, error: 'Email, current password, and new password are required.' });
+    return;
+  }
+
+  const cleanEmail = String(targetEmail).toLowerCase().trim();
+  const result = store.changeAdminPassword(cleanEmail, String(currentPassword), String(newPassword));
+
+  if (!result.success) {
+    res.status(400).json({ success: false, error: result.error });
+    return;
+  }
+
+  res.json({
+    success: true,
+    message: 'Administrator password changed successfully.'
+  });
+});
+
+/**
+ * 6. Auth context helper: Returns current active tenant / profile info
  * Strictly enforces tenant privacy: non-super-admins only receive their authorized shop.
  */
 authRoutes.get('/current-user', (req: Request, res: Response) => {
@@ -178,7 +299,6 @@ authRoutes.get('/current-user', (req: Request, res: Response) => {
   }
 
   // Non-Super Admin: Shop Owner, Manager, Staff
-  // Look up profile by email if available, else by shop_id and role
   let profile = userEmail ? store.profiles.find(p => p.email.toLowerCase() === userEmail) : undefined;
   if (!profile) {
     profile = store.profiles.find(p => p.shop_id === shopId && p.role === role) || store.profiles[0];
@@ -187,7 +307,15 @@ authRoutes.get('/current-user', (req: Request, res: Response) => {
   const assignedShop = store.getShop(profile.shop_id) || store.shops[0];
 
   res.json({
-    user: profile,
+    user: {
+      id: profile.id,
+      shop_id: profile.shop_id,
+      full_name: profile.full_name,
+      email: profile.email,
+      phone: profile.phone,
+      role: profile.role,
+      created_at: profile.created_at
+    },
     currentShop: assignedShop,
     // Strictly isolate: Non-Super Admin NEVER receives list of other shops
     availableShops: [{ id: assignedShop.id, name: assignedShop.name, slug: assignedShop.slug, business_type: assignedShop.business_type, plan: assignedShop.plan }]
@@ -195,7 +323,7 @@ authRoutes.get('/current-user', (req: Request, res: Response) => {
 });
 
 /**
- * 4. Cross-Tenant Security Middleware
+ * 7. Cross-Tenant Security Middleware
  * Prevents any user from accessing another shop by tampering with x-shop-id header or request parameters.
  */
 export function enforceTenantIsolation(req: Request, res: Response, next: NextFunction) {

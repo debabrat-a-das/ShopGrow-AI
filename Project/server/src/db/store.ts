@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   Shop, Profile, Customer, Product, Offer, Campaign, CampaignRecipient, 
   Conversation, Message, Lead, Sale, ShopSettings, IntegrationSettings, ConsentEvent, CustomerImport,
   ProductCategory, ProductAttribute, AuditLog, SocialLead, BusinessType, SystemTraceEvent,
@@ -7,6 +7,7 @@ import {
   SuperAdminRecord, SuperAdminStatus, ShopBranding
 } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
+import { PasswordService } from '../services/passwordService.js';
 
 export class AppDataStore {
   shops: Shop[] = [];
@@ -1577,6 +1578,8 @@ export class AppDataStore {
   }
 
   seedSuperAdmins(): void {
+    const adminInitialPass = process.env.ADMIN_INITIAL_PASSWORD || process.env.ADMIN_PASSWORD || 'adminpassword';
+    const hashed = PasswordService.hashPassword(adminInitialPass);
     this.superAdmins = [
       {
         id: 'sa-genesis-001',
@@ -1587,7 +1590,10 @@ export class AppDataStore {
         granted_by: 'SYSTEM_GENESIS',
         granted_at: new Date('2024-01-01').toISOString(),
         created_at: new Date('2024-01-01').toISOString(),
-        last_login_at: new Date().toISOString()
+        last_login_at: new Date().toISOString(),
+        password_hash: hashed.hash,
+        password_salt: hashed.salt,
+        failed_login_attempts: 0
       }
     ];
   }
@@ -1653,8 +1659,16 @@ export class AppDataStore {
     return this.superAdmins.some(sa => sa.email.toLowerCase().trim() === clean && sa.status === 'ACTIVE');
   }
 
+  sanitizeAdminRecord(admin: SuperAdminRecord): SuperAdminRecord {
+    const copy = { ...admin };
+    delete copy.password_hash;
+    delete copy.password_salt;
+    delete copy.reset_token_hash;
+    return copy;
+  }
+
   getSuperAdmins(): SuperAdminRecord[] {
-    return this.superAdmins;
+    return this.superAdmins.map(sa => this.sanitizeAdminRecord(sa));
   }
 
   addSuperAdmin(email: string, fullName: string, grantedBy: string): { success: boolean; admin?: SuperAdminRecord; error?: string } {
@@ -1716,11 +1730,135 @@ export class AppDataStore {
     return { success: true, admin };
   }
 
-  resolveUserByCredentials(email: string, _password?: string): { profile: Profile; shop?: Shop } | null {
+  verifyAdminCredentials(email: string, password: string): { valid: boolean; admin?: SuperAdminRecord; error?: string; status?: number } {
+    if (!email || !password) {
+      return { valid: false, error: 'Email and password are required', status: 400 };
+    }
+    const clean = email.toLowerCase().trim();
+    const admin = this.superAdmins.find(sa => sa.email.toLowerCase().trim() === clean);
+    if (!admin) {
+      return { valid: false, error: 'Access Denied: You do not have verified Super Administrator privileges on this platform.', status: 403 };
+    }
+    if (admin.status !== 'ACTIVE') {
+      return { valid: false, error: 'Access Denied: Super Admin account has been revoked or suspended.', status: 403 };
+    }
+    if (admin.locked_until && new Date(admin.locked_until) > new Date()) {
+      return { valid: false, error: 'Account temporarily locked due to consecutive failed login attempts. Please try again later or use password reset.', status: 429 };
+    }
+
+    if (!admin.password_hash || !admin.password_salt) {
+      const seeded = PasswordService.hashPassword(process.env.ADMIN_PASSWORD || 'adminpassword');
+      admin.password_hash = seeded.hash;
+      admin.password_salt = seeded.salt;
+    }
+
+    const isMatch = PasswordService.verifyPassword(password, admin.password_hash, admin.password_salt);
+    if (!isMatch) {
+      admin.failed_login_attempts = (admin.failed_login_attempts || 0) + 1;
+      if (admin.failed_login_attempts >= 5) {
+        admin.locked_until = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        this.logAuditAction('PLATFORM_SECURITY', admin.full_name, 'SUPER_ADMIN', 'ADMIN_ACCOUNT_LOCKED', { email: clean, attempts: admin.failed_login_attempts });
+      }
+      return { valid: false, error: 'Invalid admin credentials.', status: 401 };
+    }
+
+    admin.failed_login_attempts = 0;
+    admin.locked_until = undefined;
+    admin.last_login_at = new Date().toISOString();
+    return { valid: true, admin: this.sanitizeAdminRecord(admin) };
+  }
+
+  setAdminPassword(email: string, newPassword: string): { success: boolean; error?: string } {
+    const clean = email.toLowerCase().trim();
+    const admin = this.superAdmins.find(sa => sa.email.toLowerCase().trim() === clean);
+    if (!admin) {
+      return { success: false, error: 'Admin account not found.' };
+    }
+    const policy = PasswordService.validatePolicy(newPassword);
+    if (!policy.valid) {
+      return { success: false, error: policy.error };
+    }
+    const { hash, salt } = PasswordService.hashPassword(newPassword);
+    admin.password_hash = hash;
+    admin.password_salt = salt;
+    admin.failed_login_attempts = 0;
+    admin.locked_until = undefined;
+    admin.reset_token_hash = undefined;
+    admin.reset_token_expires_at = undefined;
+    this.logAuditAction('PLATFORM_SECURITY', admin.full_name, 'SUPER_ADMIN', 'ADMIN_PASSWORD_RESET_SUCCESS', { email: clean });
+    return { success: true };
+  }
+
+  createAdminPasswordResetToken(email: string): { success: boolean; rawToken?: string; expiresAt?: string; error?: string } {
+    const clean = email.toLowerCase().trim();
+    const admin = this.superAdmins.find(sa => sa.email.toLowerCase().trim() === clean && sa.status === 'ACTIVE');
+    if (!admin) {
+      return { success: true };
+    }
+    const { rawToken, tokenHash, expiresAt } = PasswordService.generateResetToken(60);
+    admin.reset_token_hash = tokenHash;
+    admin.reset_token_expires_at = expiresAt;
+    this.logAuditAction('PLATFORM_SECURITY', admin.full_name, 'SUPER_ADMIN', 'PASSWORD_RESET_TOKEN_ISSUED', { email: clean });
+    return { success: true, rawToken, expiresAt };
+  }
+
+  resetAdminPasswordWithToken(email: string, rawToken: string, newPassword: string): { success: boolean; error?: string } {
+    const clean = email.toLowerCase().trim();
+    const admin = this.superAdmins.find(sa => sa.email.toLowerCase().trim() === clean && sa.status === 'ACTIVE');
+    if (!admin || !admin.reset_token_hash || !admin.reset_token_expires_at) {
+      return { success: false, error: 'Invalid or expired password reset token.' };
+    }
+    const isValid = PasswordService.verifyResetToken(rawToken, admin.reset_token_hash, admin.reset_token_expires_at);
+    if (!isValid) {
+      return { success: false, error: 'Invalid or expired password reset token.' };
+    }
+    const policy = PasswordService.validatePolicy(newPassword);
+    if (!policy.valid) {
+      return { success: false, error: policy.error };
+    }
+    const { hash, salt } = PasswordService.hashPassword(newPassword);
+    admin.password_hash = hash;
+    admin.password_salt = salt;
+    admin.reset_token_hash = undefined;
+    admin.reset_token_expires_at = undefined;
+    admin.failed_login_attempts = 0;
+    admin.locked_until = undefined;
+    this.logAuditAction('PLATFORM_SECURITY', admin.full_name, 'SUPER_ADMIN', 'PASSWORD_RESET_TOKEN_USED', { email: clean });
+    return { success: true };
+  }
+
+  changeAdminPassword(email: string, currentPassword: string, newPassword: string): { success: boolean; error?: string } {
+    const clean = email.toLowerCase().trim();
+    const admin = this.superAdmins.find(sa => sa.email.toLowerCase().trim() === clean && sa.status === 'ACTIVE');
+    if (!admin || !admin.password_hash || !admin.password_salt) {
+      return { success: false, error: 'Admin account not found or uninitialized.' };
+    }
+    const isMatch = PasswordService.verifyPassword(currentPassword, admin.password_hash, admin.password_salt);
+    if (!isMatch) {
+      return { success: false, error: 'Current password does not match.' };
+    }
+    const policy = PasswordService.validatePolicy(newPassword);
+    if (!policy.valid) {
+      return { success: false, error: policy.error };
+    }
+    const { hash, salt } = PasswordService.hashPassword(newPassword);
+    admin.password_hash = hash;
+    admin.password_salt = salt;
+    admin.failed_login_attempts = 0;
+    admin.locked_until = undefined;
+    this.logAuditAction('PLATFORM_SECURITY', admin.full_name, 'SUPER_ADMIN', 'PASSWORD_CHANGED', { email: clean });
+    return { success: true };
+  }
+
+  resolveUserByCredentials(email: string, password?: string): { profile: Profile; shop?: Shop } | null {
     if (!email) return null;
     const clean = email.toLowerCase().trim();
     const profile = this.profiles.find(p => p.email.toLowerCase().trim() === clean && p.role !== 'SUPER_ADMIN');
     if (!profile) return null;
+    if (password && profile.password_hash && profile.password_salt) {
+      const isMatch = PasswordService.verifyPassword(password, profile.password_hash, profile.password_salt);
+      if (!isMatch) return null;
+    }
     const shop = this.getShop(profile.shop_id);
     return { profile, shop };
   }

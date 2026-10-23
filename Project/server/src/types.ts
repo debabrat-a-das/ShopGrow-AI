@@ -1,4 +1,4 @@
-export type UserRole = 'SUPER_ADMIN' | 'SHOP_OWNER' | 'MANAGER' | 'STAFF';
+﻿export type UserRole = 'SUPER_ADMIN' | 'SHOP_OWNER' | 'MANAGER' | 'STAFF';
 
 export type BusinessType = 
   | 'MOBILE_ELECTRONICS'
@@ -162,6 +162,10 @@ export interface Profile {
   phone: string;
   role: UserRole;
   created_at: string;
+  password_hash?: string;
+  password_salt?: string;
+  reset_token_hash?: string;
+  reset_token_expires_at?: string;
 }
 
 export interface Customer {
@@ -685,6 +689,12 @@ export interface SuperAdminRecord {
   revoked_at?: string;
   created_at: string;
   last_login_at?: string;
+  password_hash?: string;
+  password_salt?: string;
+  reset_token_hash?: string;
+  reset_token_expires_at?: string;
+  failed_login_attempts?: number;
+  locked_until?: string;
 }
 
 export type BrandingBackgroundType = 'DEFAULT_WHITE' | 'CUSTOM_COLOR' | 'CUSTOM_IMAGE';
