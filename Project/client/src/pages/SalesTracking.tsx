@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { IndianRupee, Plus, ShoppingBag, TrendingUp, Calendar, User, Tag } from 'lucide-react';
 import { api } from '../services/api';
 import { Sale } from '../types';
@@ -19,7 +19,8 @@ export const SalesTracking: React.FC<SalesTrackingProps> = ({ onOpenRecordSale }
     setLoading(true);
     try {
       const res = await api.get('/sales');
-      setSales(res || []);
+      const salesList = Array.isArray(res) ? res : (Array.isArray(res?.sales) ? res.sales : []);
+      setSales(salesList);
     } catch (err) {
       console.error(err);
     } finally {
@@ -27,8 +28,9 @@ export const SalesTracking: React.FC<SalesTrackingProps> = ({ onOpenRecordSale }
     }
   };
 
-  const totalRevenue = sales.reduce((acc, s) => acc + Number(s.sale_amount || 0), 0);
-  const attributedSales = sales.filter(s => !!s.campaign_id);
+  const safeSales = Array.isArray(sales) ? sales : [];
+  const totalRevenue = safeSales.reduce((acc, s) => acc + Number(s.sale_amount || 0), 0);
+  const attributedSales = safeSales.filter(s => !!s.campaign_id);
   const attributedRevenue = attributedSales.reduce((acc, s) => acc + Number(s.sale_amount || 0), 0);
 
   return (
@@ -40,7 +42,7 @@ export const SalesTracking: React.FC<SalesTrackingProps> = ({ onOpenRecordSale }
             <IndianRupee className="h-5 w-5 text-emerald-400" />
             <span>Sales & Campaign Attribution</span>
             <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-mono">
-              {sales.length} confirmed sales
+              {safeSales.length} confirmed sales
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">

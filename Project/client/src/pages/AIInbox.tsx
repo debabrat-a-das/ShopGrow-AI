@@ -1,30 +1,32 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
-  MessageSquare, Flame, AlertCircle, Bot, UserCheck, CheckCircle2, 
-  Send, ShieldAlert, Sparkles, Phone, Store, IndianRupee, RefreshCw, 
-  CheckCheck, Clock, Share2, Globe, Check
+  MessageSquare, UserCheck, Bot, CheckCircle2, 
+  Send, RefreshCw, AlertCircle, Flame, 
+  IndianRupee, Share2, Check, Sparkles, ShieldAlert,
+  Globe, CheckCheck
 } from 'lucide-react';
 import { api } from '../services/api';
-import { Conversation, Message, Customer, LeadChannel } from '../types';
-
-const FacebookIcon = ({ className = 'h-3.5 w-3.5' }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-);
-
-const InstagramIcon = ({ className = 'h-3.5 w-3.5' }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-  </svg>
-);
+import { Conversation, Message, LeadChannel } from '../types';
 
 interface AIInboxProps {
   initialTab?: string;
   initialCustomerPhone?: string;
-  onRecordSale: (customer?: Customer) => void;
+  onRecordSale: (customer: any) => void;
   onViewCustomer: (customerId: string) => void;
 }
+
+// Mini SVG Brand Icons for pristine channel fidelity
+const FacebookIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+  </svg>
+);
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  </svg>
+);
 
 export const AIInbox: React.FC<AIInboxProps> = ({
   initialTab = 'all',
@@ -58,25 +60,29 @@ export const AIInbox: React.FC<AIInboxProps> = ({
     setLoadingList(true);
     try {
       const res = await api.get('/conversations', { tab: currentStatusTab });
-      setConversations(res || []);
+      const convList: Conversation[] = Array.isArray(res)
+        ? res
+        : (Array.isArray(res?.conversations) ? res.conversations : []);
+      setConversations(convList);
 
-      if (res && res.length > 0) {
+      if (convList.length > 0) {
         if (initialCustomerPhone) {
-          const match = res.find((c: Conversation) => c.customer_phone === initialCustomerPhone);
+          const match = convList.find((c: Conversation) => c.customer_phone === initialCustomerPhone);
           if (match) {
             setSelectedConvId(match.id);
             return;
           }
         }
-        if (!selectedConvId || !res.some((c: Conversation) => c.id === selectedConvId)) {
-          setSelectedConvId(res[0].id);
+        if (!selectedConvId || !convList.some((c: Conversation) => c.id === selectedConvId)) {
+          setSelectedConvId(convList[0].id);
         }
       } else {
         setSelectedConvId('');
         setActiveThread(null);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch conversations:', err);
+      setConversations([]);
     } finally {
       setLoadingList(false);
     }
@@ -86,9 +92,42 @@ export const AIInbox: React.FC<AIInboxProps> = ({
     setLoadingThread(true);
     try {
       const res = await api.get(`/conversations/${id}`);
-      setActiveThread(res);
+      if (res && res.conversation) {
+        setActiveThread({
+          conversation: res.conversation,
+          messages: Array.isArray(res.messages) ? res.messages : [],
+          customer: res.customer || null,
+          lead: res.lead || null,
+          shop: res.shop || null,
+          offers: Array.isArray(res.offers) ? res.offers : []
+        });
+      } else if (res && (res.id || res.customer_name)) {
+        setActiveThread({
+          conversation: res,
+          messages: Array.isArray(res.messages) ? res.messages : [],
+          customer: res.customer || null,
+          lead: null,
+          shop: null,
+          offers: []
+        });
+      } else {
+        const fallbackConv = (Array.isArray(conversations) ? conversations : []).find(c => c.id === id);
+        if (fallbackConv) {
+          setActiveThread({
+            conversation: fallbackConv,
+            messages: [],
+            customer: null,
+            lead: null,
+            shop: null,
+            offers: []
+          });
+        } else {
+          setActiveThread(null);
+        }
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch conversation thread:', err);
+      setActiveThread(null);
     } finally {
       setLoadingThread(false);
     }
@@ -115,7 +154,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
   };
 
   const handleToggleTakeover = async () => {
-    if (!selectedConvId || !activeThread) return;
+    if (!selectedConvId || !activeThread?.conversation) return;
     try {
       await api.post(`/conversations/${selectedConvId}/takeover`, {
         is_human_takeover: !activeThread.conversation.is_human_takeover
@@ -163,7 +202,9 @@ export const AIInbox: React.FC<AIInboxProps> = ({
     { id: 'WEBSITE', label: 'Web Chat', icon: Globe, color: 'text-teal-400' }
   ];
 
-  const filteredConversations = conversations.filter(conv => {
+  const safeConversations = Array.isArray(conversations) ? conversations : [];
+  const filteredConversations = safeConversations.filter(conv => {
+    if (!conv) return false;
     if (currentChannelFilter === 'ALL') return true;
     return (conv.channel || 'WHATSAPP') === currentChannelFilter;
   });
@@ -236,7 +277,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
         <div className="w-80 sm:w-96 border-r border-slate-800 bg-slate-950 flex flex-col shrink-0">
           <div className="p-3 border-b border-slate-800 text-xs text-slate-400 flex items-center justify-between">
             <span>{filteredConversations.length} Conversations</span>
-            <button onClick={fetchConversations} className="hover:text-white transition">
+            <button onClick={fetchConversations} className="hover:text-white transition" title="Refresh conversations">
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -249,7 +290,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
             ) : filteredConversations.length > 0 ? (
               filteredConversations.map(conv => {
                 const isSelected = selectedConvId === conv.id;
-                const isHot = conv.interest_level === 'HOT' || conv.lead_score >= 70;
+                const isHot = conv.interest_level === 'HOT' || (conv.lead_score ?? 0) >= 70;
                 const chBadge = getChannelBadge(conv.channel);
                 const ChIcon = chBadge.icon;
 
@@ -271,32 +312,34 @@ export const AIInbox: React.FC<AIInboxProps> = ({
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-500 font-mono">
-                        {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {conv.last_message_at ? new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400 font-mono">{conv.customer_phone}</span>
-                      <div className="flex items-center space-x-1.5">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${chBadge.bg}`}>
-                          {chBadge.label}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 truncate max-w-[200px]">
+                        {conv.interested_product || 'General inquiry'}
+                      </span>
+                      {isHot && (
+                        <span className="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold border border-rose-500/30">
+                          HOT {conv.lead_score || 80}
                         </span>
-                        {isHot && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                            HOT ({conv.lead_score})
-                          </span>
-                        )}
-                        <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">
-                          {conv.intent}
-                        </span>
-                      </div>
+                      )}
                     </div>
 
-                    <div className="text-[11px] text-slate-400 truncate flex items-center justify-between">
-                      <span className="truncate">{conv.interested_product || 'Inquiry'}</span>
-                      {conv.source_reference && (
-                        <span className="text-[10px] text-slate-500 truncate max-w-[120px]">
-                          ref: {conv.source_reference}
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${chBadge.bg}`}>
+                        {chBadge.label}
+                      </span>
+                      {conv.is_human_takeover ? (
+                        <span className="text-purple-400 font-semibold flex items-center space-x-1">
+                          <UserCheck className="h-3 w-3" />
+                          <span>Staff</span>
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400 font-semibold flex items-center space-x-1">
+                          <Bot className="h-3 w-3" />
+                          <span>AI Active</span>
                         </span>
                       )}
                     </div>
@@ -313,21 +356,21 @@ export const AIInbox: React.FC<AIInboxProps> = ({
 
         {/* Right Pane: Active Thread */}
         <div className="flex-1 flex flex-col bg-slate-900 overflow-hidden">
-          {activeThread ? (
+          {activeThread && activeThread.conversation ? (
             <>
               {/* Thread Header */}
               <div className="p-4 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
-                    {activeThread.conversation.customer_name[0] || 'C'}
+                    {activeThread.conversation.customer_name?.[0] || 'C'}
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <h2 className="font-bold text-sm text-white">
-                        {activeThread.conversation.customer_name}
+                        {activeThread.conversation.customer_name || 'Customer'}
                       </h2>
                       <span className="text-xs font-mono text-slate-400">
-                        {activeThread.conversation.customer_phone}
+                        {activeThread.conversation.customer_phone || ''}
                       </span>
                       {/* Channel Badge */}
                       {(() => {
@@ -343,7 +386,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
                     </div>
                     <div className="flex items-center space-x-2 mt-0.5 text-xs">
                       <span className="text-slate-400">Interested in:</span>
-                      <span className="text-emerald-400 font-semibold">{activeThread.conversation.interested_product}</span>
+                      <span className="text-emerald-400 font-semibold">{activeThread.conversation.interested_product || 'Store Inquiry'}</span>
                     </div>
                   </div>
                 </div>
@@ -425,19 +468,19 @@ export const AIInbox: React.FC<AIInboxProps> = ({
                 <div className="flex items-center space-x-2 text-emerald-300">
                   <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>
-                    <strong>AI Recommendation:</strong> {activeThread.conversation.recommended_action}
+                    <strong>AI Recommendation:</strong> {activeThread.conversation.recommended_action || 'Assist customer with product specs and store visit details.'}
                   </span>
                 </div>
                 <div className="flex items-center space-x-3 shrink-0">
                   <span className="text-slate-400">
-                    Lead Score: <strong className="text-rose-400 font-mono text-sm">{activeThread.conversation.lead_score}</strong>/100
+                    Lead Score: <strong className="text-rose-400 font-mono text-sm">{activeThread.conversation.lead_score ?? 80}</strong>/100
                   </span>
                 </div>
               </div>
 
               {/* Chat Message Thread */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0b141a]">
-                {activeThread.messages?.map((msg: Message) => {
+                {(activeThread.messages || []).map((msg: Message) => {
                   const isOutbound = msg.direction === 'OUTBOUND';
 
                   return (
@@ -465,7 +508,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
 
                         <div className="flex items-center justify-end space-x-1 text-[10px] text-slate-400">
                           <span>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                           </span>
                           {isOutbound && (
                             <CheckCheck className="h-3 w-3 text-emerald-400" />
@@ -480,7 +523,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
               {/* Bottom Message Input Bar */}
               <div className="p-3 bg-slate-950 border-t border-slate-800 space-y-2 shrink-0">
                 {/* AI Suggested Response Shortcut */}
-                {activeThread.conversation.lead_score >= 70 && !activeThread.conversation.is_human_takeover && (
+                {((activeThread.conversation.lead_score ?? 0) >= 70) && !activeThread.conversation.is_human_takeover && (
                   <div className="bg-slate-900 p-2 rounded-xl border border-emerald-500/30 flex items-center justify-between text-xs">
                     <span className="text-slate-300 truncate max-w-lg">
                       💡 Suggested: "Namaskar! Kal 11am-8pm ashun amader showroom-e. Live demo & instant delivery ready!"
@@ -498,26 +541,30 @@ export const AIInbox: React.FC<AIInboxProps> = ({
                   <input
                     type="text"
                     value={manualReply}
-                    onChange={(e) => setManualReply(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
-                    placeholder="Type reply or instructions to customer..."
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    onChange={e => setManualReply(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSendReply()}
+                    placeholder="Type official WhatsApp reply to customer..."
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <button
                     onClick={() => handleSendReply()}
                     disabled={sending || !manualReply.trim()}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition disabled:opacity-50"
+                    className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition disabled:opacity-50"
                   >
-                    <Send className="h-3.5 w-3.5" />
-                    <span>Send</span>
+                    <Send className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 text-xs space-y-2">
-              <MessageSquare className="h-10 w-10 text-slate-700" />
-              <span>Select a conversation from the left to view customer messages.</span>
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500 space-y-3">
+              <MessageSquare className="h-12 w-12 text-slate-700 stroke-[1.5]" />
+              <div className="space-y-1">
+                <p className="font-semibold text-sm text-slate-300">Select an Inquiry to Start Conversation</p>
+                <p className="text-xs text-slate-500 max-w-sm">
+                  Click any conversation from the list to view real-time chat history, AI recommendations, and customer profiles.
+                </p>
+              </div>
             </div>
           )}
         </div>

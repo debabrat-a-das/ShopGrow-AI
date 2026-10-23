@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { 
   Package, Plus, Search, Filter, Sparkles, Tag, Layers, 
   CheckCircle2, AlertCircle, ArrowRight, RefreshCw, Eye 
@@ -49,7 +49,8 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
         }),
         api.get('/products/meta/categories').catch(() => [])
       ]);
-      setProducts(prodRes || []);
+      const prodList = Array.isArray(prodRes) ? prodRes : (Array.isArray(prodRes?.products) ? prodRes.products : []);
+      setProducts(prodList);
       setCategories(catRes || []);
       if (catRes && catRes.length > 0 && !newCategory) {
         setNewCategory(catRes[0].name);
@@ -118,7 +119,8 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
     }
   };
 
-  const filteredProducts = products.filter(p => {
+  const safeProducts = Array.isArray(products) ? products : [];
+  const filteredProducts = safeProducts.filter(p => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -181,7 +183,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                 : 'bg-slate-800 text-slate-400 hover:text-white'
             }`}
           >
-            All Categories ({products.length})
+            All Categories ({safeProducts.length})
           </button>
           {categories.map(c => (
             <button

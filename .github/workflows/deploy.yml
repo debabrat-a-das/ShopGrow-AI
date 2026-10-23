@@ -33,6 +33,8 @@ jobs:
 
       - name: Build frontend
         working-directory: Project/client
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://shopgrow-ai.onrender.com' }}
         run: npm run build
 
       - name: Upload Pages artifact

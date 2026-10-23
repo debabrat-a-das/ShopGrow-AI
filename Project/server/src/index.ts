@@ -1,4 +1,4 @@
-import path from 'path';
+﻿import path from 'path';
 import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
@@ -29,13 +29,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const allowedOrigins = process.env.CLIENT_URL
-  ? [process.env.CLIENT_URL.replace(/\/$/, ''), 'http://localhost:5173', 'http://localhost:3000']
-  : '*';
-
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: (origin, callback) => {
+    // Reflect request origin to allow GitHub Pages, local dev, and public domains with credentials
+    if (!origin) return callback(null, true);
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-shop-id', 'x-user-role', 'Accept']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

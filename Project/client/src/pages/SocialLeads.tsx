@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { 
   Share2, MessageSquare, Zap, ShieldCheck, Search, Filter, RefreshCw, 
   ExternalLink, User, CheckCircle2, AlertTriangle, ArrowRight, Clock, PlusCircle,
@@ -94,7 +94,8 @@ export const SocialLeads: React.FC<SocialLeadsProps> = ({ currentShopId }) => {
     }
   };
 
-  const filteredComments = comments.filter(c => {
+  const safeComments = Array.isArray(comments) ? comments : [];
+  const filteredComments = safeComments.filter(c => {
     if (filterPlatform !== 'ALL' && c.platform !== filterPlatform) return false;
     if (filterStatus !== 'ALL' && c.processing_status !== filterStatus) return false;
     if (searchQuery.trim()) {
@@ -108,10 +109,10 @@ export const SocialLeads: React.FC<SocialLeadsProps> = ({ currentShopId }) => {
   });
 
   // KPIs
-  const totalComments = comments.length;
-  const hotLeadsCount = comments.filter(c => c.detected_intent === 'PRICE_ENQUIRY' || c.detected_intent === 'VISIT_INTENT' || c.detected_intent === 'EXCHANGE_ENQUIRY').length;
-  const duplicateIgnoredCount = comments.filter(c => c.processing_status === 'DUPLICATE_IGNORED').length;
-  const uniqueUsers = new Set(comments.map(c => c.platform_user_id || c.user_display_name)).size;
+  const totalComments = safeComments.length;
+  const hotLeadsCount = safeComments.filter(c => c.detected_intent === 'PRICE_ENQUIRY' || c.detected_intent === 'VISIT_INTENT' || c.detected_intent === 'EXCHANGE_ENQUIRY').length;
+  const duplicateIgnoredCount = safeComments.filter(c => c.processing_status === 'DUPLICATE_IGNORED').length;
+  const uniqueUsers = new Set(safeComments.map(c => c.platform_user_id || c.user_display_name)).size;
 
   const isFbConnected = metaSettings?.facebook?.connection_status === 'LIVE_CONNECTED' || metaSettings?.facebook?.connection_status === 'MOCK_MODE';
   const isAdConnected = metaSettings?.ad_account?.connection_status === 'LIVE_CONNECTED' || metaSettings?.ad_account?.connection_status === 'MOCK_MODE';

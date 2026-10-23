@@ -1,4 +1,4 @@
-import { UserRole } from '../types';
+﻿import { UserRole } from '../types';
 import { 
   MOCK_DASHBOARD, MOCK_CUSTOMERS, MOCK_PRODUCTS, 
   MOCK_META_INTEGRATIONS, MOCK_ATTRIBUTION, MOCK_CROSS_SHOP,
@@ -51,6 +51,9 @@ class ApiService {
     if (envUrl) {
       return String(envUrl).replace(/\/$/, '') + '/api';
     }
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      return 'https://shopgrow-ai.onrender.com/api';
+    }
     return '/api';
   }
 
@@ -58,7 +61,13 @@ class ApiService {
     if (this.customBaseUrl) {
       return this.customBaseUrl.replace(/\/$/, '');
     }
-    return import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '';
+    if (import.meta.env.VITE_API_URL) {
+      return String(import.meta.env.VITE_API_URL).replace(/\/$/, '');
+    }
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      return 'https://shopgrow-ai.onrender.com';
+    }
+    return '';
   }
 
   setCustomBaseUrl(url: string) {
@@ -110,14 +119,64 @@ class ApiService {
     if (endpoint.includes('/customers')) {
       return { customers: MOCK_CUSTOMERS, total: MOCK_CUSTOMERS.length };
     }
+    if (endpoint.includes('/products/meta/categories')) {
+      return [
+        { id: 'cat-smartphones', name: 'Smartphones', shop_id: this.currentShopId, description: 'Smartphones and accessories', created_at: new Date().toISOString() },
+        { id: 'cat-tv', name: 'Smart TVs', shop_id: this.currentShopId, description: 'Smart televisions and displays', created_at: new Date().toISOString() }
+      ];
+    }
     if (endpoint.includes('/products')) {
-      return { products: MOCK_PRODUCTS, total: MOCK_PRODUCTS.length };
+      return MOCK_PRODUCTS;
     }
     if (endpoint.includes('/meta-integrations')) {
       return { integrations: MOCK_META_INTEGRATIONS };
     }
+    // Specific single conversation thread
+    if (endpoint.startsWith('/conversations/') && endpoint !== '/conversations') {
+      const convId = endpoint.replace(/^\/conversations\//, '').split('?')[0];
+      const conv: any = MOCK_CONVERSATIONS.find((c: any) => c.id === convId) || MOCK_CONVERSATIONS[0];
+      return {
+        conversation: conv,
+        messages: [
+          {
+            id: 'fallback-msg-1',
+            shop_id: this.currentShopId,
+            conversation_id: conv.id,
+            direction: 'OUTBOUND',
+            sender_phone: '+919830012345',
+            recipient_phone: conv.customer_phone,
+            body: 'Namaskar! Saha Electronics-e apnake shagoto. Apnar kon product ba model pochondo?',
+            status: 'DELIVERED',
+            ai_generated: true,
+            created_at: conv.last_message_at || new Date().toISOString()
+          },
+          {
+            id: 'fallback-msg-2',
+            shop_id: this.currentShopId,
+            conversation_id: conv.id,
+            direction: 'INBOUND',
+            sender_phone: conv.customer_phone,
+            recipient_phone: '+919830012345',
+            body: conv.interested_product ? `Ami ${conv.interested_product} niye jante chai.` : 'Details please.',
+            status: 'DELIVERED',
+            ai_generated: false,
+            created_at: conv.last_message_at || new Date().toISOString()
+          }
+        ],
+        customer: {
+          id: conv.customer_id,
+          shop_id: this.currentShopId,
+          full_name: conv.customer_name,
+          phone_e164: conv.customer_phone,
+          whatsapp_opt_in: conv.channel === 'WHATSAPP'
+        },
+        lead: null,
+        shop: { id: this.currentShopId, name: 'Saha Electronics' },
+        offers: []
+      };
+    }
     if (endpoint.includes('/conversations')) {
-      return { conversations: MOCK_CONVERSATIONS, total: MOCK_CONVERSATIONS.length };
+      return MOCK_CONVERSATIONS;
     }
     if (endpoint.includes('/settings/branding')) {
       return {
@@ -128,16 +187,52 @@ class ApiService {
       };
     }
     if (endpoint.includes('/leads')) {
-      return { leads: MOCK_DASHBOARD.hotLeadsToday, total: MOCK_DASHBOARD.hotLeadsToday.length };
+      return MOCK_DASHBOARD.hotLeadsToday || [];
+    }
+    if (endpoint.includes('/occasions/settings')) {
+      return {
+        id: 'fallback-occasion-settings',
+        shop_id: this.currentShopId,
+        birthday_enabled: true,
+        wedding_anniversary_enabled: true,
+        purchase_anniversary_enabled: true,
+        relationship_anniversary_enabled: true,
+        channel: 'WHATSAPP',
+        send_time: '10:00',
+        send_days_in_advance: 0,
+        default_language: 'bn',
+        offers: {
+          birthday: { enabled: false },
+          wedding_anniversary: { enabled: false },
+          purchase_anniversary: { enabled: false }
+        },
+        updated_at: new Date().toISOString()
+      };
+    }
+    if (endpoint.includes('/occasions/due')) {
+      return {
+        summary: { totalDueToday: 0, totalUpcoming: 0 },
+        today: { count: 0, items: [] },
+        upcoming: []
+      };
+    }
+    if (endpoint.includes('/occasions/logs')) {
+      return [];
+    }
+    if (endpoint.includes('/occasions/analytics')) {
+      return { totalSent: 0, conversionRate: '0%', revenueGenerated: 0 };
     }
     if (endpoint.includes('/occasions')) {
       return { dueToday: [], upcoming: [] };
     }
     if (endpoint.includes('/offers')) {
-      return { offers: [] };
+      return [];
     }
     if (endpoint.includes('/campaigns')) {
-      return { campaigns: [] };
+      return [];
+    }
+    if (endpoint.includes('/sales')) {
+      return [];
     }
     return { success: true };
   }
