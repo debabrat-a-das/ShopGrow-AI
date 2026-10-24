@@ -24,9 +24,12 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
   initialShopSlug,
   initialInviteToken
 }) => {
-  // Check if accessing private admin route: /admin/login or ?admin=true
-  const isAdminRoute = initialMode === 'admin' || 
-    (typeof window !== 'undefined' && (window.location.pathname.includes('/admin') || window.location.search.includes('admin=true')));
+  // State for toggling between Store Workspace and Platform Super Admin
+  const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
+    return initialMode === 'admin' || 
+      (typeof window !== 'undefined' && (window.location.pathname.includes('/admin') || window.location.search.includes('admin=true')));
+  });
+  const isAdminRoute = isAdminMode;
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -288,9 +291,25 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
 
             {/* Error Banner */}
             {errorMessage && (
-              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 text-xs text-rose-400 flex items-start space-x-2.5 animate-in fade-in">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{errorMessage}</span>
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 text-xs text-rose-400 flex flex-col space-y-2 animate-in fade-in">
+                <div className="flex items-start space-x-2.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
+                {errorMessage.includes('/admin/login') && !isAdminMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAdminMode(true);
+                      setEmail('admin@shopgrow.ai');
+                      setPassword('adminpassword');
+                      setErrorMessage(null);
+                    }}
+                    className="self-start ml-6 px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] rounded-lg shadow-sm transition active:scale-95 flex items-center space-x-1"
+                  >
+                    <span>Switch to Super Admin Portal & Pre-fill Credentials ?</span>
+                  </button>
+                )}
               </div>
             )}
 
