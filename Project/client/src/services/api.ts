@@ -300,12 +300,40 @@ class ApiService {
       });
       if (!res.ok) {
         this.notifyConnection(false);
+        try {
+          const errBody = await res.json();
+          if (errBody && (errBody.error || errBody.message || errBody.success === false)) {
+            return {
+              success: false,
+              status: res.status,
+              error: errBody.error || errBody.message,
+              ...errBody
+            };
+          }
+        } catch {
+          // Non-JSON response
+        }
+        if (endpoint.startsWith('/auth/')) {
+          return {
+            success: false,
+            status: res.status,
+            error: res.status === 404
+              ? `Authentication route not found on backend (${this.getBaseUrl()}${endpoint}). Ensure backend is deployed and running.`
+              : `Server error (${res.status}): ${res.statusText || 'Authentication request failed'}`
+          };
+        }
         return { success: true, message: 'Processed with local cache', data };
       }
       this.notifyConnection(true);
       return await res.json();
-    } catch (err) {
+    } catch (err: any) {
       this.notifyConnection(false);
+      if (endpoint.startsWith('/auth/')) {
+        return {
+          success: false,
+          error: `Backend server unreachable at ${this.getBaseUrl()}. Please ensure your backend is online and running.`
+        };
+      }
       return { success: true, message: 'Processed with local cache', data };
     }
   }

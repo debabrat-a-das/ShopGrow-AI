@@ -50,6 +50,20 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
   const invitedShop = initialShopSlug ? availableShops.find(s => s.slug === initialShopSlug) : null;
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token') || params.get('resetToken');
+      const urlEmail = params.get('email');
+      if (urlToken) {
+        setIsForgotPasswordOpen(true);
+        setForgotToken(urlToken);
+        if (urlEmail) setForgotEmail(urlEmail);
+        setForgotStep('RESET');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     setErrorMessage(null);
     if (isAdminRoute) {
       setEmail('admin@shopgrow.ai');
@@ -85,11 +99,12 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
       } else {
         // 2. Production Standard Login: Server resolves role (SHOP_OWNER, MANAGER, STAFF) and single authorized shop
         const res = await api.post('/auth/login', { email: email.trim(), password });
-        if (res && res.success) {
-          api.setToken(res.token);
+        if (res && res.success && res.user && res.user.role) {
+          api.setToken(res.token || '');
           api.setUserRole(res.user.role);
-          api.setShopId(res.currentShop.id);
-          onLoginSuccess(res.user.role, res.currentShop.id);
+          const shopId = res.currentShop?.id || res.user.shop_id || res.availableShops?.[0]?.id || 'shop-saha-electronics-001';
+          api.setShopId(shopId);
+          onLoginSuccess(res.user.role, shopId);
         } else {
           setErrorMessage(res?.error || 'Invalid email or password.');
         }
@@ -109,11 +124,12 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email: targetEmail, password: pass });
-      if (res && res.success) {
-        api.setToken(res.token);
+      if (res && res.success && res.user && res.user.role) {
+        api.setToken(res.token || '');
         api.setUserRole(res.user.role);
-        api.setShopId(res.currentShop.id);
-        onLoginSuccess(res.user.role, res.currentShop.id);
+        const shopId = res.currentShop?.id || res.user.shop_id || res.availableShops?.[0]?.id || 'shop-saha-electronics-001';
+        api.setShopId(shopId);
+        onLoginSuccess(res.user.role, shopId);
       } else {
         setErrorMessage(res?.error || 'Login failed.');
       }
@@ -126,7 +142,8 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
 
   const handleRequestPasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) {
+    const targetEmail = forgotEmail.trim();
+    if (!targetEmail) {
       setForgotError('Please enter your administrator email address.');
       return;
     }
@@ -134,14 +151,14 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
     setForgotError(null);
     try {
       const endpoint = isAdminRoute ? '/auth/admin/forgot-password' : '/auth/forgot-password';
-      const res = await api.post(endpoint, { email: forgotEmail.trim() });
-      if (res && res.success) {
-        if (res.resetToken) {
-          setForgotToken(res.resetToken);
-        }
+      const res = await api.post(endpoint, { email: targetEmail });
+      if (res && res.success && res.resetToken) {
+        setForgotToken(res.resetToken);
         setForgotStep('RESET');
+      } else if (res && res.success && !res.resetToken) {
+        setForgotError(res.message || 'If an administrator account with that email exists, reset instructions have been generated.');
       } else {
-        setForgotError(res?.error || 'Failed to generate reset request.');
+        setForgotError(res?.error || 'Failed to generate reset request. Please ensure the backend server is reachable.');
       }
     } catch (err: any) {
       setForgotError(err.message || 'Error communicating with authentication server.');
@@ -474,19 +491,46 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
 
             {forgotStep === 'RESET' && (
               <form onSubmit={handleCompletePasswordReset} className="space-y-3">
-                <p className="text-xs text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
-                  Verification token generated. Please enter your new password below.
-                </p>
+                <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 space-y-1">
+                  <div className="flex items-center space-x-1.5 text-emerald-400 font-semibold text-xs">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span>64-Character Reset Token Ready</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    A cryptographically secure reset token was generated. Enter your new password below to complete the reset.
+                  </p>
+                </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">Security Reset Token</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-medium text-slate-400">Security Reset Token (64 characters)</label>
+                    {forgotToken && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                            navigator.clipboard.writeText(forgotToken);
+                            alert('Reset token copied to clipboard!');
+                          }
+                        }}
+                        className="text-[10px] text-emerald-400 hover:text-emerald-300 underline"
+                      >
+                        Copy Token
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
                     required
                     value={forgotToken}
                     onChange={(e) => setForgotToken(e.target.value)}
                     placeholder="Paste 64-character reset token"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs font-mono text-slate-200"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs font-mono text-emerald-300 break-all"
                   />
+                  {forgotToken && (
+                    <span className="text-[10px] text-slate-500 block mt-0.5">
+                      Token length: {forgotToken.length}/64 characters (Valid for 60 mins)
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-400 mb-1">New Password (min 8 chars, uppercase, lowercase, digit)</label>
