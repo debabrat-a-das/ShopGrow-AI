@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, Store, User, Lock, Eye, EyeOff, Sparkles, 
-  ArrowRight, CheckCircle2, AlertCircle, HelpCircle, ShieldCheck,
+  ArrowRight, ArrowLeft, X, CheckCircle2, AlertCircle, HelpCircle, ShieldCheck,
   ChevronDown, ChevronUp, FlaskConical
 } from 'lucide-react';
 import { UserRole, Shop } from '../types';
@@ -449,11 +449,39 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
       {isForgotPasswordOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="h-5 w-5 text-emerald-400" />
-              <h3 className="font-bold text-white text-sm">
-                {isAdminRoute ? 'Super Admin Secure Password Reset' : 'Account Password Reset'}
-              </h3>
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2">
+                {forgotStep === 'RESET' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('REQUEST');
+                      setForgotError(null);
+                    }}
+                    className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition mr-1 flex items-center text-xs"
+                    title="Back to Email Entry"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    <span>Back</span>
+                  </button>
+                )}
+                <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
+                <h3 className="font-bold text-white text-sm">
+                  {isAdminRoute ? 'Super Admin Secure Password Reset' : 'Account Password Reset'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPasswordOpen(false);
+                  setForgotStep('REQUEST');
+                  setForgotError(null);
+                }}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                title="Back to Sign In"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {forgotError && (
@@ -546,10 +574,35 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition disabled:opacity-50"
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition disabled:opacity-50 shadow-lg"
                 >
                   {forgotLoading ? 'Updating Password...' : 'Save New Password & Complete Reset'}
                 </button>
+
+                <div className="flex items-center space-x-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('REQUEST');
+                      setForgotError(null);
+                    }}
+                    className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition flex items-center justify-center space-x-1"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Back to Email Step</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotPasswordOpen(false);
+                      setForgotStep('REQUEST');
+                      setForgotError(null);
+                    }}
+                    className="flex-1 py-2 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white text-xs rounded-xl transition"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
               </form>
             )}
 
@@ -572,7 +625,7 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
               </div>
             )}
 
-            {forgotStep !== 'DONE' && (
+            {forgotStep === 'REQUEST' && (
               <button
                 type="button"
                 onClick={() => {
@@ -580,9 +633,10 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
                   setForgotStep('REQUEST');
                   setForgotError(null);
                 }}
-                className="w-full py-1.5 text-xs text-slate-400 hover:text-white transition"
+                className="w-full py-1.5 text-xs text-slate-400 hover:text-white transition flex items-center justify-center space-x-1"
               >
-                Cancel
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Sign In</span>
               </button>
             )}
           </div>
