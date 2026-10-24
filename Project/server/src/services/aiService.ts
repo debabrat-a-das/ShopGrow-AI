@@ -464,41 +464,55 @@ Details jante 'YES' reply korun! STOP reply korle ar kono message jabe na.`;
    * Generate campaign message variants for a New Product Arrival
    */
   static generateProductArrivalVariants(product: Product, shop: Shop, customInstruction?: string): CampaignCopyVariants {
-    const isFurniture = shop.business_type === 'FURNITURE';
+    const isFurniture = shop?.business_type === 'FURNITURE';
     const noteText = customInstruction ? `\n💡 Note: ${customInstruction.trim()}` : '';
 
+    const brand = product?.brand || 'Premium';
+    const model = product?.model || 'Arrival';
+    const mrpStr = (typeof product?.mrp === 'number' && !isNaN(product.mrp))
+      ? product.mrp.toLocaleString('en-IN')
+      : String(product?.mrp || 'Contact Showroom');
+    const shopName = shop?.name || 'Our Showroom';
+    const shopAddress = shop?.address || 'Showroom Address';
+    const shopCity = shop?.city || '';
+
+    const customAttrs = Object.entries(product?.custom_attributes || {});
+    const highlightsEn = customAttrs.length > 0 ? customAttrs.map(([k, v]) => `${k}: ${v}`).join(' • ') : (isFurniture ? 'Handcrafted solid wood finish' : 'Premium craftsmanship');
+    const highlightsBn = customAttrs.length > 0 ? customAttrs.slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(' • ') : 'উচ্চমানের ফিনিশিং';
+    const highlightsBanglish = customAttrs.length > 0 ? customAttrs.slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(' • ') : 'Top quality';
+
     const professionalEnglish = 
-`New Arrival Alert at ${shop.name}!
+`New Arrival Alert at ${shopName}!
 
-We are delighted to introduce the brand new ${product.brand} ${product.model}.
-• Price: ₹${product.mrp.toLocaleString('en-IN')}
-• Key Highlights: ${Object.entries(product.custom_attributes || {}).map(([k, v]) => `${k}: ${v}`).join(' • ') || 'Premium craftsmanship'}
-• Warranty: ${product.specs?.warranty || 'Official Manufacturer Warranty'}${noteText}
+We are delighted to introduce the brand new ${brand} ${model}.
+• Price: ₹${mrpStr}
+• Key Highlights: ${highlightsEn}
+• Warranty: ${product?.specs?.warranty || 'Official Manufacturer Warranty'}${noteText}
 
-Be the first to experience this in our showroom: ${shop.address}, ${shop.city}.
+Be the first to experience this in our showroom: ${shopAddress}${shopCity ? ', ' + shopCity : ''}.
 Reply 'VISIT' to schedule a private walkthrough. Reply STOP to opt-out.`;
 
     const friendlyBengali = 
-`নতুন পণ্যের আগমন — ${shop.name}!
+`নতুন পণ্যের আগমন — ${shopName}!
 
-আমাদের শোরুমে এসে গেছে নতুন ${product.brand} ${product.model}।
-• মূল্য: ₹${product.mrp.toLocaleString('en-IN')}
-• বিশেষ বৈশিষ্ট্য: ${Object.entries(product.custom_attributes || {}).slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(' • ') || 'উচ্চমানের ফিনিশিং'}${customInstruction ? `\n💡 নোট: ${customInstruction.trim()}` : ''}
+আমাদের শোরুমে এসে গেছে নতুন ${brand} ${model}।
+• মূল্য: ₹${mrpStr}
+• বিশেষ বৈশিষ্ট্য: ${highlightsBn}${customInstruction ? `\n💡 নোট: ${customInstruction.trim()}` : ''}
 
-আমাদের শোরুমে সরাসরি এসে যাচাই করুন: ${shop.address}, ${shop.city}।
+আমাদের শোরুমে সরাসরি এসে যাচাই করুন: ${shopAddress}${shopCity ? ', ' + shopCity : ''}।
 বিস্তারিত জানতে রিপ্লাই করুন। বন্ধ করতে STOP লিখুন।`;
 
     const banglish = 
-`New Arrival! ${shop.name}-e chole esheche brand new ${product.brand} ${product.model}!
+`New Arrival! ${shopName}-e chole esheche brand new ${brand} ${model}!
 
-• Price: Rs. ${product.mrp.toLocaleString('en-IN')}
-• Special Features: ${Object.entries(product.custom_attributes || {}).slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(' • ') || 'Top quality'}
-• Showroom: ${shop.address}${noteText}
+• Price: Rs. ${mrpStr}
+• Special Features: ${highlightsBanglish}
+• Showroom: ${shopAddress}${noteText}
 
 Reply korun book korte ba visit korun. STOP pathiye bondho korun.`;
 
     const shortWhatsApp = 
-`✨ NEW ARRIVAL: ${product.brand} ${product.model} now at ${shop.name}! Price: ₹${product.mrp.toLocaleString('en-IN')}.${customInstruction ? ` ${customInstruction.trim()}` : ''} Visit: ${shop.address}. Reply 1 to book demo or STOP to unsubscribe.`;
+`✨ NEW ARRIVAL: ${brand} ${model} now at ${shopName}! Price: ₹${mrpStr}.${customInstruction ? ` ${customInstruction.trim()}` : ''} Visit: ${shopAddress}. Reply 1 to book demo or STOP to unsubscribe.`;
 
     return {
       professionalEnglish,

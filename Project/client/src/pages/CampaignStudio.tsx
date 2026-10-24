@@ -128,9 +128,23 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
         offer_id: offerId,
         custom_instruction: customInstruction 
       });
-      setVariants(copyRes.variants);
-      setMessageTemplate(copyRes.variants.banglish || copyRes.variants.friendlyBengali);
-      setCampaignName(`${recRes.offer?.brand} ${recRes.offer?.model} Upgrade Festival`);
+
+      const resolvedVariants = copyRes?.variants || copyRes?.data?.variants;
+      if (!resolvedVariants) {
+        throw new Error(copyRes?.error || 'AI copy variants could not be generated for this offer.');
+      }
+
+      setVariants(resolvedVariants);
+      const initialTemplate = resolvedVariants.banglish 
+        || resolvedVariants.friendlyBengali 
+        || resolvedVariants.professionalEnglish 
+        || resolvedVariants.shortWhatsApp 
+        || '';
+      setMessageTemplate(initialTemplate);
+
+      const brand = recRes?.offer?.brand || '';
+      const model = recRes?.offer?.model || '';
+      setCampaignName(brand || model ? `${brand} ${model} Upgrade Festival`.trim() : 'Special Offer Campaign');
     } catch (err: any) {
       alert('Failed to analyze offer: ' + err.message);
     } finally {
@@ -164,9 +178,23 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
         product_id: productId,
         custom_instruction: customInstruction 
       });
-      setVariants(copyRes.variants);
-      setMessageTemplate(copyRes.variants.banglish || copyRes.variants.friendlyBengali);
-      setCampaignName(`New Arrival: ${recRes.product?.brand} ${recRes.product?.model}`);
+
+      const resolvedVariants = copyRes?.variants || copyRes?.data?.variants;
+      if (!resolvedVariants) {
+        throw new Error(copyRes?.error || 'AI copy variants could not be generated for this product.');
+      }
+
+      setVariants(resolvedVariants);
+      const initialTemplate = resolvedVariants.banglish 
+        || resolvedVariants.friendlyBengali 
+        || resolvedVariants.professionalEnglish 
+        || resolvedVariants.shortWhatsApp 
+        || '';
+      setMessageTemplate(initialTemplate);
+
+      const brand = recRes?.product?.brand || '';
+      const model = recRes?.product?.model || '';
+      setCampaignName(brand || model ? `New Arrival: ${brand} ${model}`.trim() : 'New Product Arrival Campaign');
     } catch (err: any) {
       alert('Failed to analyze product: ' + err.message);
     } finally {
@@ -211,6 +239,10 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
     setSelectedVariantKey(key);
     if (variants && variants[key]) {
       setMessageTemplate(variants[key]);
+    } else if (variants) {
+      // Fallback if specific requested key is missing or undefined
+      const fallback = variants.banglish || variants.friendlyBengali || variants.professionalEnglish || variants.shortWhatsApp || '';
+      setMessageTemplate(fallback);
     }
   };
 

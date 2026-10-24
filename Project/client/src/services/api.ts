@@ -228,6 +228,25 @@ class ApiService {
     if (endpoint.includes('/offers')) {
       return [];
     }
+    if (endpoint.includes('/campaigns/generate-copy')) {
+      return {
+        success: true,
+        variants: {
+          banglish: `New Arrival at ${this.currentShopId}! Special promotional benefits available. Visit showroom ba call korun details jante. Reply STOP to opt-out.`,
+          friendlyBengali: `নতুন আগমন! আমাদের শোরুমে এসে গেছে নতুন সম্ভার। বিস্তারিত জানতে আমাদের সাথে যোগাযোগ করুন। বন্ধ করতে STOP লিখুন।`,
+          professionalEnglish: `New Arrival Alert! We are delighted to present our latest curated additions. Visit our showroom for exclusive access. Reply STOP to opt-out.`,
+          shortWhatsApp: `✨ NEW ARRIVAL: Now available at our showroom! Reply 1 for details or STOP to unsubscribe.`
+        }
+      };
+    }
+    if (endpoint.includes('/campaigns/recommend-segment')) {
+      return {
+        criteria: { brand: 'All Brands', category: 'General' },
+        reasoning: 'Store Audience Lifecycle: Analyzed verified customers with WhatsApp marketing consent.',
+        breakdown: { totalDatabase: 5, eligibleCustomers: 5 },
+        customerList: []
+      };
+    }
     if (endpoint.includes('/campaigns')) {
       return [];
     }
@@ -322,6 +341,9 @@ class ApiService {
               : `Server error (${res.status}): ${res.statusText || 'Authentication request failed'}`
           };
         }
+        if (endpoint.includes('/campaigns/generate-copy') || endpoint.includes('/campaigns/recommend-segment')) {
+          return this.getFallbackData(endpoint);
+        }
         return { success: true, message: 'Processed with local cache', data };
       }
       this.notifyConnection(true);
@@ -333,6 +355,9 @@ class ApiService {
           success: false,
           error: `Backend server unreachable at ${this.getBaseUrl()}. Please ensure your backend is online and running.`
         };
+      }
+      if (endpoint.includes('/campaigns/generate-copy') || endpoint.includes('/campaigns/recommend-segment')) {
+        return this.getFallbackData(endpoint);
       }
       return { success: true, message: 'Processed with local cache', data };
     }

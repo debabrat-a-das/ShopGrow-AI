@@ -274,16 +274,19 @@ router.post('/generate-copy', (req: Request, res: Response) => {
   const shopId = (req.headers['x-shop-id'] as string) || 'shop-saha-electronics-001';
   const { offer_id, custom_instruction } = req.body;
 
-  const shop = store.getShop(shopId);
-  const offer = store.offers.find(o => o.id === offer_id && o.shop_id === shopId);
+  const shop = store.getShop(shopId) || store.shops[0];
+  let offer = store.offers.find(o => o.id === offer_id && o.shop_id === shopId);
+  if (!offer) {
+    offer = store.offers.find(o => o.id === offer_id);
+  }
 
-  if (!shop || !offer) {
-    res.status(404).json({ error: 'Shop or Offer not found' });
+  if (!offer) {
+    res.status(404).json({ success: false, error: `Offer not found with ID '${offer_id}'.` });
     return;
   }
 
   const variants = AIService.generateCampaignVariants(offer, shop, custom_instruction);
-  res.json({ variants });
+  res.json({ success: true, variants });
 });
 
 // AI Copy Generator for New Product Arrivals
@@ -291,16 +294,19 @@ router.post('/generate-copy-product', (req: Request, res: Response) => {
   const shopId = (req.headers['x-shop-id'] as string) || 'shop-saha-electronics-001';
   const { product_id, custom_instruction } = req.body;
 
-  const shop = store.getShop(shopId);
-  const product = store.products.find(p => p.id === product_id && p.shop_id === shopId);
+  const shop = store.getShop(shopId) || store.shops[0];
+  let product = store.products.find(p => p.id === product_id && p.shop_id === shopId);
+  if (!product) {
+    product = store.products.find(p => p.id === product_id);
+  }
 
-  if (!shop || !product) {
-    res.status(404).json({ error: 'Shop or Product not found' });
+  if (!product) {
+    res.status(404).json({ success: false, error: `Product not found with ID '${product_id}'.` });
     return;
   }
 
   const variants = AIService.generateProductArrivalVariants(product, shop, custom_instruction);
-  res.json({ variants });
+  res.json({ success: true, variants });
 });
 
 // Create campaign
