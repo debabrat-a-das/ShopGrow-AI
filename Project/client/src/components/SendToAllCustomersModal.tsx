@@ -679,7 +679,7 @@ export const SendToAllCustomersModal: React.FC<SendToAllCustomersModalProps> = (
               ) : (
                 <>
                   {/* KPI Counters */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                     <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Total Database</span>
                       <span className="text-xl font-bold font-mono text-white mt-0.5 block">{breakdown.totalDatabase}</span>

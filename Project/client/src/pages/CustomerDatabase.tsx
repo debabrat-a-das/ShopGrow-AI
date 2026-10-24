@@ -51,7 +51,7 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -67,7 +67,7 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <button
             id="btn-send-to-all-customers"
             onClick={() => setIsSendAllOpen(true)}
@@ -90,7 +90,7 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
 
       {/* Filter Toolbar */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
           {/* Search */}
           <div className="relative sm:col-span-2">
             <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />

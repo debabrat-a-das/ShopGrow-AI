@@ -112,7 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const actionItems = data.actionCenterItems || [];
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-200">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Welcome Banner & Fast Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 p-6 rounded-2xl border border-slate-800 shadow-xl">
         <div>
@@ -130,7 +130,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <button
             onClick={onOpenImport}
             className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-700 transition"
@@ -530,7 +530,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 text-center text-xs pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 text-center text-xs pt-2">
           <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
             <span className="text-[10px] text-slate-500 block uppercase">1. Audience</span>
             <span className="text-base font-bold text-white font-mono">{data.funnel.audience}</span>

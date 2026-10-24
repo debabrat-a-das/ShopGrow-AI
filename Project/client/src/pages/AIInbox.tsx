@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  MessageSquare, UserCheck, Bot, CheckCircle2, 
+  ArrowLeft, MessageSquare, UserCheck, Bot, CheckCircle2, 
   Send, RefreshCw, AlertCircle, Flame, 
   IndianRupee, Share2, Check, Sparkles, ShieldAlert,
   Globe, CheckCheck
@@ -225,9 +225,9 @@ export const AIInbox: React.FC<AIInboxProps> = ({
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden animate-in fade-in duration-150">
       {/* Top Filter Tabs Bar: Status & Channel Selectors */}
-      <div className="h-14 border-b border-slate-800 bg-slate-900/80 px-6 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="min-h-[3.5rem] py-2 px-3 sm:px-6 border-b border-slate-800 bg-slate-900/80 flex flex-wrap items-center justify-between gap-2.5 shrink-0 overflow-x-auto">
         {/* Status Filter Tabs */}
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 overflow-x-auto pb-1 sm:pb-0 max-w-full">
           {statusTabs.map(t => {
             const Icon = t.icon;
             const isActive = currentStatusTab === t.id;
@@ -274,7 +274,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
       {/* Two-Pane Inbox View */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Pane: Conversation List */}
-        <div className="w-80 sm:w-96 border-r border-slate-800 bg-slate-950 flex flex-col shrink-0">
+        <div className={`w-full md:w-80 lg:w-96 border-r border-slate-800 bg-slate-950 flex flex-col shrink-0 ${selectedConvId ? "hidden md:flex" : "flex"}`}>
           <div className="p-3 border-b border-slate-800 text-xs text-slate-400 flex items-center justify-between">
             <span>{filteredConversations.length} Conversations</span>
             <button onClick={fetchConversations} className="hover:text-white transition" title="Refresh conversations">
@@ -355,12 +355,22 @@ export const AIInbox: React.FC<AIInboxProps> = ({
         </div>
 
         {/* Right Pane: Active Thread */}
-        <div className="flex-1 flex flex-col bg-slate-900 overflow-hidden">
+        <div className={`flex-1 flex flex-col bg-slate-900 overflow-hidden min-w-0 ${selectedConvId ? "flex" : "hidden md:flex"}`}>
           {activeThread && activeThread.conversation ? (
             <>
               {/* Thread Header */}
-              <div className="p-4 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center space-x-3">
+              <div className="p-3 sm:p-4 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedConvId('')}
+                    className="md:hidden p-1.5 -ml-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 flex items-center space-x-1 shrink-0"
+                    aria-label="Back to conversation list"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="text-xs font-semibold">Back</span>
+                  </button>
+
                   <div className="h-10 w-10 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
                     {activeThread.conversation.customer_name?.[0] || 'C'}
                   </div>
@@ -489,7 +499,7 @@ export const AIInbox: React.FC<AIInboxProps> = ({
                       className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-md p-3 rounded-2xl text-xs space-y-1 shadow-md ${
+                        className={`max-w-[88%] sm:max-w-md p-3 rounded-2xl text-xs space-y-1 shadow-md break-words ${
                           isOutbound
                             ? 'bg-[#005c4b] text-white rounded-tr-none'
                             : 'bg-[#202c33] text-slate-100 rounded-tl-none'

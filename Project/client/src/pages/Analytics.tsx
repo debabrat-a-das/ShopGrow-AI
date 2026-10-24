@@ -64,7 +64,7 @@ export const Analytics: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -232,7 +232,7 @@ export const Analytics: React.FC = () => {
                   </div>
 
                   {/* 10-Stage Granular Funnel */}
-                  <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-center text-[10px]">
                     <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
                       <span className="text-slate-500 block uppercase">Engage</span>
                       <span className="font-bold text-slate-200">{cf.metrics.engagements}</span>
@@ -256,7 +256,7 @@ export const Analytics: React.FC = () => {
                   </div>
 
                   {/* Bottom Funnel Stages */}
-                  <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px]">
                     <div className="bg-slate-950 p-2 rounded-lg border border-rose-500/20 bg-rose-950/10">
                       <span className="text-rose-400 block uppercase font-bold">Hot Leads</span>
                       <span className="font-bold text-white">{cf.metrics.hotLeads}</span>

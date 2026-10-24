@@ -276,7 +276,7 @@ export const Settings: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-5xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-white flex items-center space-x-2">

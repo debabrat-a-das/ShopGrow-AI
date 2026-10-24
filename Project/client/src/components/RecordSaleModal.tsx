@@ -105,7 +105,7 @@ export const RecordSaleModal: React.FC<RecordSaleModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 max-h-[92vh] flex flex-col">
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
@@ -195,7 +195,7 @@ export const RecordSaleModal: React.FC<RecordSaleModalProps> = ({
             <span className="text-[11px] font-bold text-pink-400 uppercase tracking-wider block">
               Occasion Offer Redemption (Optional)
             </span>
-            <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">Occasion Type</label>
                 <select

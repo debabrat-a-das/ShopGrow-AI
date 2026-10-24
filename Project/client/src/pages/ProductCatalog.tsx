@@ -132,7 +132,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
   });
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -230,7 +230,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
           Loading catalog items...
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredProducts.map(product => {
             const hasCustomAttrs = product.custom_attributes && Object.keys(product.custom_attributes).length > 0;
             const isLowStock = product.stock_quantity <= 2;
@@ -381,7 +381,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-slate-300 font-semibold block mb-1">MRP (₹)</label>
                   <input

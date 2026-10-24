@@ -94,9 +94,9 @@ export const CustomerDetailDrawer: React.FC<CustomerDetailDrawerProps> = ({
             Loading Customer 360 profile...
           </div>
         ) : data ? (
-          <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-4 sm:space-y-6">
             {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
                 <span className="text-slate-400 block mb-1">Total Purchases</span>
                 <span className="text-base font-bold text-white">

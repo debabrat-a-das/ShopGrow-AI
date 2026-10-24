@@ -27,6 +27,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConnectBackendModal } from './components/ConnectBackendModal';
 
 import { api } from './services/api';
+import { LayoutDashboard, Package, Users, MessageSquare, Menu } from 'lucide-react';
 import { UserRole, Customer, BusinessType, SubscriptionPlan, OperatingMode, Shop, ShopBranding } from './types';
 
 export function App() {
@@ -68,6 +69,7 @@ export function App() {
   });
 
   const [hotLeadsCount, setHotLeadsCount] = useState<number>(0);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState<boolean>(false);
 
@@ -312,6 +314,8 @@ export function App() {
           api.setToken('');
         }}
         shopInfo={shopInfo}
+        isMobileMenuOpen={isMobileNavOpen}
+        onToggleMobileMenu={() => setIsMobileNavOpen(prev => !prev)}
       />
 
       {/* Main App Body */}
@@ -323,9 +327,12 @@ export function App() {
             setInboxInitialTab('all');
             setInboxCustomerPhone(undefined);
             setCurrentTab(tab);
+            setIsMobileNavOpen(false);
           }}
           userRole={currentRole}
           hotLeadsCount={hotLeadsCount}
+          isOpen={isMobileNavOpen}
+          onClose={() => setIsMobileNavOpen(false)}
         />
 
         {/* Dynamic Content Pane with Tenant-Specific Branding */}
@@ -348,7 +355,7 @@ export function App() {
           return (
             <main
               style={mainStyle}
-              className="flex-1 overflow-y-auto relative transition-colors duration-200"
+              className="flex-1 overflow-y-auto relative transition-colors duration-200 pb-20 lg:pb-6 min-w-0"
             >
               {/* Optional Contrast Overlay for Image Backgrounds */}
               {!isSuperAdminPortal && branding?.bg_type === 'CUSTOM_IMAGE' && branding?.overlay_type !== 'NONE' && (
@@ -487,6 +494,94 @@ export function App() {
           );
         })()}
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Persistent touch navigation for mobile phones & small tablets) */}
+      <nav 
+        aria-label="Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex items-center justify-around safe-area-bottom shadow-lg"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentTab('dashboard');
+            setIsMobileNavOpen(false);
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 min-h-[44px] min-w-[56px] rounded-lg transition-colors ${
+            currentTab === 'dashboard' ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+          aria-label="Dashboard"
+        >
+          <LayoutDashboard className="h-5 w-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Dashboard</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentTab('products');
+            setIsMobileNavOpen(false);
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 min-h-[44px] min-w-[56px] rounded-lg transition-colors ${
+            currentTab === 'products' ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+          aria-label="Products"
+        >
+          <Package className="h-5 w-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Catalog</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentTab('customers');
+            setIsMobileNavOpen(false);
+          }}
+          className={`flex flex-col items-center justify-center py-1 px-2 min-h-[44px] min-w-[56px] rounded-lg transition-colors ${
+            currentTab === 'customers' ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+          aria-label="Customers CRM"
+        >
+          <Users className="h-5 w-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">CRM</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setInboxInitialTab('all');
+            setInboxCustomerPhone(undefined);
+            setCurrentTab('inbox');
+            setIsMobileNavOpen(false);
+          }}
+          className={`relative flex flex-col items-center justify-center py-1 px-2 min-h-[44px] min-w-[56px] rounded-lg transition-colors ${
+            currentTab === 'inbox' ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+          aria-label="Unified Inbox"
+        >
+          <div className="relative">
+            <MessageSquare className="h-5 w-5 mb-0.5" />
+            {hotLeadsCount > 0 && (
+              <span className="absolute -top-1 -right-2 h-3.5 min-w-[14px] px-1 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {hotLeadsCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] tracking-tight">Inbox</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsMobileNavOpen(prev => !prev)}
+          className={`flex flex-col items-center justify-center py-1 px-2 min-h-[44px] min-w-[56px] rounded-lg transition-colors ${
+            isMobileNavOpen ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+          }`}
+          aria-label="More navigation options"
+          aria-expanded={isMobileNavOpen}
+        >
+          <Menu className="h-5 w-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">More</span>
+        </button>
+      </nav>
 
       {/* Global Modals and Drawers */}
       <CustomerImportModal

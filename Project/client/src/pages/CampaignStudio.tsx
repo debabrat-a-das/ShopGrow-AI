@@ -344,7 +344,7 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
   });
 
   return (
-    <div className="p-6 space-y-8 max-w-6xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-6xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -616,7 +616,7 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
         {/* Live Audience Breakdown Metric Row */}
         {recommendation && (
           <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-center text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center text-xs">
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
                 <span className="text-slate-400 text-[10px] block uppercase">Total DB</span>
                 <span className="text-base font-bold text-white font-mono">{recommendation.breakdown.totalDatabase}</span>
@@ -965,7 +965,7 @@ export const CampaignStudio: React.FC<CampaignStudioProps> = ({
                   </div>
 
                   {/* 5-Step Visual Stepper */}
-                  <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-center text-[10px]">
                     <div className={`p-2 rounded-lg border ${
                       ['PREPARING', 'VALIDATING_AUDIENCE', 'QUEUED', 'SENDING', 'COMPLETED'].includes(dispatchState)
                         ? 'bg-emerald-950/50 border-emerald-500 text-emerald-300 font-bold'

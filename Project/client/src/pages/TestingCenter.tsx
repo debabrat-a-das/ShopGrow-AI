@@ -294,7 +294,7 @@ export const TestingCenter: React.FC<TestingCenterProps> = ({
   ];
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Sandbox Safety Header Banner */}
       <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center space-x-3">
@@ -1288,7 +1288,7 @@ export const TestingCenter: React.FC<TestingCenterProps> = ({
           {/* Scorecard */}
           {testSuiteResults && (
             <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-3 text-center text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
                 <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
                   <span className="text-slate-400 block mb-1">Total Tests</span>
                   <span className="text-xl font-bold font-mono text-white">{testSuiteResults.total}</span>
@@ -1469,7 +1469,7 @@ export const TestingCenter: React.FC<TestingCenterProps> = ({
             {/* 20-Step Results Scorecard */}
             {completeDemoResult && (
               <div className="space-y-4 animate-in zoom-in-95 duration-150">
-                <div className="grid grid-cols-4 gap-3 text-center text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
                     <span className="text-slate-400 block mb-1">Total Lifecycle Steps</span>
                     <span className="text-xl font-bold font-mono text-white">{completeDemoResult.steps?.length || 20}</span>

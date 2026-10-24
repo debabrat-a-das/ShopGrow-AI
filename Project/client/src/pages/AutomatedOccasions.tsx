@@ -137,7 +137,7 @@ export const AutomatedOccasions: React.FC<AutomatedOccasionsProps> = ({
   const upcomingGroups = dueData?.upcoming || [];
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-purple-950/30 to-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
         <div>
@@ -326,7 +326,7 @@ export const AutomatedOccasions: React.FC<AutomatedOccasionsProps> = ({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[600px]">
                 <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">Customer</th>
@@ -910,7 +910,7 @@ export const AutomatedOccasions: React.FC<AutomatedOccasionsProps> = ({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[600px]">
                 <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
                   <tr>
                     <th className="p-3.5">Customer</th>

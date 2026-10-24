@@ -56,7 +56,7 @@ export const PublicOptIn: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 max-w-5xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-5xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-white flex items-center space-x-2">

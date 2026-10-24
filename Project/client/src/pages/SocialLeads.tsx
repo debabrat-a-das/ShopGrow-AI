@@ -119,7 +119,7 @@ export const SocialLeads: React.FC<SocialLeadsProps> = ({ currentShopId }) => {
   const isIgConnected = metaSettings?.instagram?.connection_status === 'LIVE_CONNECTED' || metaSettings?.instagram?.connection_status === 'MOCK_MODE';
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>

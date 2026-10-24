@@ -242,7 +242,7 @@ export const AuthPages: React.FC<AuthPagesProps> = ({
       </header>
 
       {/* Main Login Area */}
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+      <main className="flex-1 flex items-center justify-center p-3.5 sm:p-6 relative z-10">
         <div className="w-full max-w-md space-y-6 animate-in fade-in zoom-in-95 duration-200">
           {/* Invite Welcome Banner if token present */}
           {initialInviteToken && (

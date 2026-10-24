@@ -196,7 +196,7 @@ export const SuperAdmin: React.FC<SuperAdminProps> = ({
   };
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -333,7 +333,7 @@ export const SuperAdmin: React.FC<SuperAdminProps> = ({
             <Layers className="h-4 w-4 text-emerald-400" />
             <span>Subscription Tier Distribution</span>
           </h3>
-          <div className="grid grid-cols-4 gap-2 text-center text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
             {Object.entries(data.subscriptionPlans || {}).map(([plan, count]) => (
               <div key={plan} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                 <span className="text-[10px] uppercase font-semibold text-slate-400 block">{plan}</span>
