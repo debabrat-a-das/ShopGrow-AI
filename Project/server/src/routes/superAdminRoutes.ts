@@ -444,4 +444,9 @@ router.patch('/admins/:id/status', (req: Request, res: Response) => {
   });
 });
 
+// 4. Retrieve Platform Global Audit Logs
+router.get('/audit-logs', (_req: Request, res: Response) => {
+  res.json(store.auditLogs || []);
+});
+
 export default router;

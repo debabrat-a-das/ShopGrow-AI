@@ -140,7 +140,7 @@ class ApiService {
     return headers;
   }
 
-  private getFallbackData(endpoint: string): any {
+  public getFallbackData(endpoint: string): any {
     if (endpoint.includes('/analytics/dashboard')) {
       return MOCK_DASHBOARD;
     }
@@ -285,6 +285,123 @@ class ApiService {
       return [];
     }
     if (endpoint.includes('/sales')) {
+      return [];
+    }
+    if (endpoint.includes('/super-admin/overview')) {
+      return {
+        metrics: {
+          totalShops: 2,
+          activeShops: 2,
+          suspendedShops: 0,
+          managedModeShops: 0,
+          totalCustomers: 5,
+          totalCampaigns: 2,
+          totalMessages: 12,
+          totalLeads: 4,
+          totalSocialLeads: 2,
+          totalSales: 3,
+          totalPlatformRevenue: 78989,
+          totalBirthdayMessages: 2,
+          totalAnniversaryMessages: 1,
+          totalOccasionRedemptions: 1,
+          totalOccasionAttributedRevenue: 15400
+        },
+        businessTypes: {
+          MOBILE_ELECTRONICS: 1,
+          FURNITURE: 1
+        },
+        subscriptionPlans: {
+          STARTER: 0,
+          GROWTH: 2,
+          PRO: 0,
+          MANAGED: 0
+        },
+        shopsSummary: [
+          {
+            id: 'shop-saha-electronics-001',
+            name: 'Saha Electronics',
+            city: 'Kolkata',
+            slug: 'saha-electronics',
+            business_type: 'MOBILE_ELECTRONICS',
+            plan: 'GROWTH',
+            operating_mode: 'SHOP_MANAGED',
+            active_status: true,
+            customerCount: 5,
+            campaignCount: 2,
+            leadsCount: 4,
+            revenue: 78989,
+            meta_connected: true
+          },
+          {
+            id: 'shop-royal-teak-002',
+            name: 'Royal Teak Interiors',
+            city: 'Bangalore',
+            slug: 'royal-teak-interiors',
+            business_type: 'FURNITURE',
+            plan: 'GROWTH',
+            operating_mode: 'SHOP_MANAGED',
+            active_status: true,
+            customerCount: 3,
+            campaignCount: 1,
+            leadsCount: 2,
+            revenue: 45000,
+            meta_connected: false
+          }
+        ]
+      };
+    }
+    if (endpoint.includes('/super-admin/admins')) {
+      return {
+        success: true,
+        data: [
+          {
+            id: 'sa-genesis-001',
+            user_id: 'profile-super-admin-000',
+            email: 'admin@shopgrow.ai',
+            full_name: 'Antigravity Super Admin',
+            status: 'ACTIVE',
+            granted_at: '2024-01-01T00:00:00.000Z',
+            granted_by: 'SYSTEM_GENESIS'
+          }
+        ]
+      };
+    }
+    if (endpoint.includes('/super-admin/audit-logs')) {
+      return [
+        {
+          id: 'audit-sa-01',
+          shop_id: 'PLATFORM_GLOBAL',
+          actor_name: 'Antigravity Super Admin',
+          actor_role: 'SUPER_ADMIN',
+          action: 'SUPER_ADMIN_SESSION_INIT',
+          details: { message: 'Super Admin master portal active' },
+          created_at: new Date().toISOString()
+        }
+      ];
+    }
+    if (endpoint.includes('/super-admin/shops')) {
+      return [
+        {
+          id: 'shop-saha-electronics-001',
+          name: 'Saha Electronics',
+          city: 'Kolkata',
+          business_type: 'MOBILE_ELECTRONICS',
+          plan: 'GROWTH',
+          operating_mode: 'SHOP_MANAGED',
+          active_status: true
+        },
+        {
+          id: 'shop-royal-teak-002',
+          name: 'Royal Teak Interiors',
+          city: 'Bangalore',
+          business_type: 'FURNITURE',
+          plan: 'GROWTH',
+          operating_mode: 'SHOP_MANAGED',
+          active_status: true
+        }
+      ];
+    }
+    if (endpoint.includes('/testing/event-logs') || endpoint.includes('/testing/outbound-messages')) {
       return [];
     }
     return { success: true };
