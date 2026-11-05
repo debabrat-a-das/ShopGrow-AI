@@ -815,19 +815,19 @@ export const SuperAdmin: React.FC<SuperAdminProps> = ({
                 <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left space-y-1.5 font-mono text-[11px]">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Shop Name:</span>
-                    <span className="font-bold text-white">{createdShopModalData.shop.name}</span>
+                    <span className="font-bold text-white">{createdShopModalData?.shop?.name || newShopName || 'New Store'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Industry:</span>
-                    <span className="text-emerald-400">{createdShopModalData.shop.business_type}</span>
+                    <span className="text-emerald-400">{createdShopModalData?.shop?.business_type || newBusinessType}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Tenant Slug:</span>
-                    <span className="text-purple-400">{createdShopModalData.shop.slug}</span>
+                    <span className="text-purple-400">{createdShopModalData?.shop?.slug || newShopSlug}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Owner Assigned:</span>
-                    <span className="text-slate-200">{createdShopModalData.owner.full_name}</span>
+                    <span className="text-slate-200">{createdShopModalData?.owner?.full_name || `${newShopName} Store Owner`}</span>
                   </div>
                 </div>
 

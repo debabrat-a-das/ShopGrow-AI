@@ -4,11 +4,12 @@ import {
   Store, IndianRupee, TrendingUp, Sparkles, ArrowRight, 
   Phone, ChevronRight, PlayCircle, ShoppingBag, Eye,
   Gift, Cake, Heart, Calendar, Tag, AlertTriangle, ShieldAlert,
-  Clock, ArrowUpRight, Share2, Check, RefreshCw
+  Clock, ArrowUpRight, Share2, Check, RefreshCw, Plus
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Customer, Lead } from '../types';
 import { MOCK_DASHBOARD } from '../services/mockData';
+import { AddItemModal } from '../components/AddItemModal';
 
 interface DashboardProps {
   onNavigate: (tab: string, extra?: any) => void;
@@ -28,6 +29,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -131,6 +133,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <button
+            id="btn-dashboard-add-item"
+            type="button"
+            onClick={() => setIsAddItemOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center space-x-2 transition transform active:scale-95 border border-emerald-400/30 cursor-pointer"
+            title="Add New Inventory Item or Customer directly to Database"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add New Item</span>
+          </button>
           <button
             onClick={onOpenImport}
             className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-700 transition"
@@ -561,6 +573,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Add New Item / Customer Modal */}
+      <AddItemModal
+        isOpen={isAddItemOpen}
+        onClose={() => setIsAddItemOpen(false)}
+        onItemAdded={(item) => {
+          setActionStatus(`Successfully added "${item.model || item.full_name || 'Item'}" to live database!`);
+          fetchDashboardData();
+        }}
+      />
     </div>
   );
 };

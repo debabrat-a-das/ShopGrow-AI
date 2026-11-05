@@ -6,6 +6,7 @@ import {
 import { api } from '../services/api';
 import { Customer } from '../types';
 import { SendToAllCustomersModal } from '../components/SendToAllCustomersModal';
+import { AddItemModal } from '../components/AddItemModal';
 
 interface CustomerDatabaseProps {
   onOpenImport: () => void;
@@ -26,6 +27,7 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
   const [consent, setConsent] = useState('ALL');
   const [leadStatus, setLeadStatus] = useState('ALL');
   const [isSendAllOpen, setIsSendAllOpen] = useState(false);
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -79,8 +81,18 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
           </button>
 
           <button
+            id="btn-add-customer"
+            type="button"
+            onClick={() => setIsAddCustomerOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-2 shadow-lg shadow-emerald-600/25 transition cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Customer</span>
+          </button>
+
+          <button
             onClick={onOpenImport}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-2 shadow-lg shadow-emerald-600/25 transition"
+            className="bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center space-x-2 border border-slate-700 transition"
           >
             <Upload className="h-4 w-4" />
             <span>Import Customers (CSV/XLSX)</span>
@@ -250,6 +262,13 @@ export const CustomerDatabase: React.FC<CustomerDatabaseProps> = ({
         onClose={() => setIsSendAllOpen(false)}
         onCampaignSent={fetchCustomers}
         currentShopId={currentShopId}
+      />
+
+      <AddItemModal
+        isOpen={isAddCustomerOpen}
+        onClose={() => setIsAddCustomerOpen(false)}
+        initialType="CUSTOMER"
+        onItemAdded={() => fetchCustomers()}
       />
     </div>
   );
